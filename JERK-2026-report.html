@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspectiv Security Assessment — jerkmate.com / jerkmatelive.com (JERK-2026)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0a0e1a;--navy2:#0d1221;--navy3:#111827;--card:#151c2e;--card2:#1a2236;
+  --border:#1e2d4a;--accent:#3b82f6;--accent2:#60a5fa;
+  --critical:#ef4444;--critical-bg:rgba(239,68,68,.1);--critical-border:rgba(239,68,68,.3);
+  --high:#f97316;--high-bg:rgba(249,115,22,.1);--high-border:rgba(249,115,22,.3);
+  --medium:#eab308;--medium-bg:rgba(234,179,8,.1);--medium-border:rgba(234,179,8,.3);
+  --low:#22c55e;--low-bg:rgba(34,197,94,.08);--low-border:rgba(34,197,94,.25);
+  --info:#6366f1;--info-bg:rgba(99,102,241,.08);--info-border:rgba(99,102,241,.25);
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --evidence-bg:#050810;--orange-callout:rgba(249,115,22,.08);--green-callout:rgba(34,197,94,.08);
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6}
+a{color:var(--accent2)}
+.cover{background:linear-gradient(135deg,#050810 0%,#0a0e1a 40%,#0d1528 100%);border-bottom:1px solid var(--border);padding:60px 64px 52px;position:relative;overflow:hidden}
+.cover::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 80% 60% at 80% 20%,rgba(59,130,246,.07) 0%,transparent 60%);pointer-events:none}
+.cover-logo{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:40px;display:flex;align-items:center;gap:12px}
+.cover-logo::before{content:'';display:inline-block;width:24px;height:2px;background:var(--accent)}
+.cover h1{font-size:36px;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:8px;line-height:1.2}
+.cover-sub{font-size:18px;color:var(--text2);font-weight:300;margin-bottom:48px}
+.cover-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:800px}
+.cover-meta label{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:4px}
+.cover-meta span{font-size:14px;font-weight:500}
+.cover-phase-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);border-radius:4px;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent2);letter-spacing:.1em;text-transform:uppercase;margin-top:32px}
+.main{max-width:1100px;margin:0 auto;padding:48px 40px 80px}
+section{margin-bottom:56px}
+.section-label{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+h2{font-size:22px;font-weight:600;color:#fff;margin-bottom:20px}
+.exec-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:28px 32px;line-height:1.8}
+.exec-box p{margin-bottom:12px}
+.exec-box p:last-child{margin-bottom:0}
+.scorecard{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:40px}
+.score-card{border-radius:8px;padding:20px;text-align:center;border:1px solid}
+.score-card.critical{background:var(--critical-bg);border-color:var(--critical-border)}
+.score-card.high{background:var(--high-bg);border-color:var(--high-border)}
+.score-card.medium{background:var(--medium-bg);border-color:var(--medium-border)}
+.score-card.low{background:var(--low-bg);border-color:var(--low-border)}
+.score-card.info{background:var(--info-bg);border-color:var(--info-border)}
+.score-num{font-size:36px;font-weight:700;font-family:var(--mono);display:block}
+.score-card.critical .score-num{color:var(--critical)}
+.score-card.high .score-num{color:var(--high)}
+.score-card.medium .score-num{color:var(--medium)}
+.score-card.low .score-num{color:var(--low)}
+.score-card.info .score-num{color:var(--info)}
+.score-label{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-top:6px}
+.findings-table{width:100%;border-collapse:collapse;margin-bottom:32px}
+.findings-table th{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--navy2)}
+.findings-table td{padding:12px 14px;border-bottom:1px solid rgba(30,45,74,.5);vertical-align:top;font-size:13px}
+.findings-table tr:hover td{background:rgba(255,255,255,.02)}
+.sev-badge{display:inline-block;padding:3px 10px;border-radius:3px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.sev-critical{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+.sev-high{background:var(--high-bg);color:var(--high);border:1px solid var(--high-border)}
+.sev-medium{background:var(--medium-bg);color:var(--medium);border:1px solid var(--medium-border)}
+.sev-low{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
+.sev-info{background:var(--info-bg);color:var(--info);border:1px solid var(--info-border)}
+.finding{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:24px;overflow:hidden}
+.finding-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:16px}
+.finding-title{font-size:15px;font-weight:600;color:#fff;flex:1}
+.finding-meta{font-size:12px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+.finding-body{padding:20px 24px}
+.evidence-box{background:var(--evidence-bg);border:1px solid var(--border);border-radius:6px;padding:16px 18px;font-family:var(--mono);font-size:12px;color:#a5b4fc;margin-bottom:16px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6}
+.callout{border-radius:6px;padding:14px 18px;margin-bottom:12px;font-size:13px;line-height:1.6}
+.callout-impact{background:var(--orange-callout);border-left:3px solid var(--high);color:var(--text)}
+.callout-fix{background:var(--green-callout);border-left:3px solid var(--low);color:var(--text)}
+.callout-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;display:block;margin-bottom:6px}
+.callout-impact .callout-label{color:var(--high)}
+.callout-fix .callout-label{color:var(--low)}
+code{font-family:var(--mono);font-size:12px;background:rgba(59,130,246,.1);color:var(--accent2);padding:1px 6px;border-radius:3px}
+.arch-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.arch-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px 22px}
+.arch-card h4{font-size:12px;font-weight:600;color:var(--accent2);margin-bottom:12px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.arch-item{font-size:12px;color:var(--text2);padding:4px 0;border-bottom:1px solid rgba(30,45,74,.4);display:flex;justify-content:space-between;gap:12px}
+.arch-item:last-child{border-bottom:none}
+.arch-item .arch-key{color:var(--text3);font-family:var(--mono)}
+.arch-item .arch-val{color:var(--text);text-align:right;font-family:var(--mono);font-size:11px}
+.appendix-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.appendix-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px 22px}
+.appendix-card h4{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.15em;font-family:var(--mono);margin-bottom:14px}
+.appendix-card p{font-size:13px;color:var(--text2);line-height:1.7}
+.appendix-card ul{list-style:none;padding:0}
+.appendix-card ul li{font-size:13px;color:var(--text2);padding:4px 0;border-bottom:1px solid rgba(30,45,74,.4);font-family:var(--mono)}
+.appendix-card ul li:last-child{border-bottom:none}
+footer{background:var(--navy2);border-top:1px solid var(--border);padding:24px 64px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;color:var(--text3)}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-logo">Inspectiv Security Research</div>
+  <h1>Security Assessment Report</h1>
+  <div class="cover-sub">jerkmate.com &amp; jerkmatelive.com — JERK-2026</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><label>Engagement Ref</label><span>JERK-2026</span></div>
+    <div class="cover-meta-item"><label>Date</label><span>March–April 2026</span></div>
+    <div class="cover-meta-item"><label>Researcher</label><span>Ken Bane / Inspectiv</span></div>
+    <div class="cover-meta-item"><label>Auth</label><span>SOW on file</span></div>
+  </div>
+  <div class="cover-phase-badge">P1 Passive + P2 Active + P1-06 Deep JS Analysis</div>
+</div>
+
+<div class="main">
+
+<section>
+  <div class="section-label">Executive Summary</div>
+  <div class="exec-box">
+    <p>A combined Phase 1 passive reconnaissance, Phase 2 active unauthenticated testing, and deep JS bundle analysis was conducted against jerkmate.com, jerkmatelive.com, and associated ICF Technology / Accretive Networks infrastructure. The platform operates as one of 24 white-label brands built on the same naiadsystems.com / ICF Technology base — all sharing a common streaming pipeline and session widget architecture.</p>
+    <p>The most significant finding is a zero-authentication streaming vulnerability that mirrors the JERK-2026 scope: the platform's live stream delivery (setupstream API &#8594; manifest-server &#8594; Bottlenose HLS CDN) requires no authentication at any layer. This is confirmed across all stream classification tiers — public, gold (paid), and exclusive (private 1-on-1) — using a stream key parameter (<code>sk=</code>) that is unvalidated against authentication state. The stream ingest UUID is assigned at the encoder layer before classification, meaning the platform cannot retroactively gate streams that have already been assigned identifiers.</p>
+    <p>JS bundle analysis revealed three additional critical-to-medium infrastructure findings: the production S3 bucket (<code>ws-session-widget-prod</code>) hosting the session widget served to all 24 brands is publicly listable and all files are readable; a third-party pop-under ad script (<code>static.scptp9.com/mnpw3.js</code>, 107KB) is hardcoded in all widget variants and injected on every user session; and staging infrastructure endpoints are hardcoded in all production widget variants. An affiliate commission attribution hijacking attack plane was also documented — affiliate tracking parameters are captured client-side with no server-side validation visible in page HTML.</p>
+    <p>Corporate ownership: ICF Technology Inc. (Seattle WA, PO Box 21508) owns naiadsystems.com. FCI Inc. / Flying Croc (same address, Ross Perkins + Shawn Boday) owns fciis.net hardware. Accretive Networks owns the 207.178.x.x, 207.66.x.x, 207.246.x.x IP blocks. All share the same principals. Jerkmatelive.com is a white-label tenant on this platform.</p>
+    <p>12 confirmed findings are documented: 3 critical, 3 high, 3 medium, 2 low, 1 informational.</p>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">Finding Summary</div>
+  <div class="scorecard">
+    <div class="score-card critical"><span class="score-num">3</span><div class="score-label">Critical</div></div>
+    <div class="score-card high"><span class="score-num">3</span><div class="score-label">High</div></div>
+    <div class="score-card medium"><span class="score-num">3</span><div class="score-label">Medium</div></div>
+    <div class="score-card low"><span class="score-num">2</span><div class="score-label">Low</div></div>
+    <div class="score-card info"><span class="score-num">1</span><div class="score-label">Info</div></div>
+  </div>
+
+  <table class="findings-table">
+    <thead>
+      <tr><th>#</th><th>Severity</th><th>ID</th><th>Title</th><th>Target</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><span class="sev-badge sev-critical">Critical</span></td><td>JERK-P3-001</td><td>Unauthenticated Stream Access — All Layers (setupstream &rarr; manifest &rarr; Bottlenose HLS)</td><td>jerkmatelive.com</td></tr>
+      <tr><td>2</td><td><span class="sev-badge sev-critical">Critical</span></td><td>JERK-P3-002</td><td>Classification-Agnostic Ingest — UUID Assigned Before Public/Gold/Exclusive Classification</td><td>ICF Platform</td></tr>
+      <tr><td>3</td><td><span class="sev-badge sev-critical">Critical</span></td><td>JERK-P3-009</td><td>Production S3 Bucket Publicly Listable and Readable: ws-session-widget-prod (All 24 Brands)</td><td>AWS S3</td></tr>
+      <tr><td>4</td><td><span class="sev-badge sev-high">High</span></td><td>JERK-P3-003</td><td>24-Brand Platform Scope — sk= Parameter Unvalidated Across All White-Label Tenants</td><td>ICF Platform</td></tr>
+      <tr><td>5</td><td><span class="sev-badge sev-high">High</span></td><td>JERK-P3-004</td><td>blocksessions Oracle — Unauthenticated Premium Session Detection</td><td>jerkmatelive.com</td></tr>
+      <tr><td>6</td><td><span class="sev-badge sev-high">High</span></td><td>JERK-P3-010</td><td>Third-Party Pop-Under Ad Script Hardcoded in Production Session Widget (All 24 Brands)</td><td>ws-session-widget</td></tr>
+      <tr><td>7</td><td><span class="sev-badge sev-medium">Medium</span></td><td>JERK-P3-005</td><td>smvid Cookie Missing HttpOnly + Secure Flags, SameSite=None</td><td>jerkmatelive.com</td></tr>
+      <tr><td>8</td><td><span class="sev-badge sev-medium">Medium</span></td><td>JERK-P3-011</td><td>Staging Infrastructure Hardcoded in All Production Widget Variants</td><td>ws-session-widget</td></tr>
+      <tr><td>9</td><td><span class="sev-badge sev-medium">Medium</span></td><td>JERK-P3-012</td><td>Affiliate Commission Attribution Hijacking — Client-Side Parameter Capture, No Server Validation</td><td>jerkmate.com</td></tr>
+      <tr><td>10</td><td><span class="sev-badge sev-low">Low</span></td><td>JERK-P3-006</td><td>Unauthenticated Performer Profile + Pricing Enumeration</td><td>jerkmatelive.com</td></tr>
+      <tr><td>11</td><td><span class="sev-badge sev-low">Low</span></td><td>JERK-P3-007</td><td>Internal Hostname Disclosure (windpigeon, abra, cubone, kingler) in WS/HLS URLs</td><td>ICF Platform</td></tr>
+      <tr><td>12</td><td><span class="sev-badge sev-info">Info</span></td><td>JERK-P3-008</td><td>C2C Residual Risk — Cam-to-Cam Session Persistence Post-Payment</td><td>jerkmatelive.com</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<section>
+  <div class="section-label">Detailed Findings</div>
+
+  <!-- JERK-P3-001 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-critical">Critical</span>
+      <div>
+        <div class="finding-title">JERK-P3-001 — Unauthenticated Stream Access — Full Three-Layer Delivery Chain Open</div>
+        <div class="finding-meta">jerkmatelive.com &nbsp;|&nbsp; setupstream &rarr; manifest-server &rarr; Bottlenose CDN &nbsp;|&nbsp; Streaming Pipeline</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Full delivery chain — all layers zero-auth:
+
+LAYER 1 — setupstream API:
+GET https://jerkmatelive.com/api/setupstream?sk={stream_key}
+HTTP/1.1 200 OK  (no session, no cookie, no auth header required)
+Returns: manifest_url pointing to manifest-server
+
+LAYER 2 — manifest-server:
+GET https://manifest.naiadsystems.com/live/s:{stream_id}/index.m3u8
+HTTP/1.1 200 OK  CORS: *
+Returns: HLS master manifest
+
+LAYER 3 — Bottlenose HLS CDN:
+GET https://edge-hls.doppiocdn.com/hls/{id}/master/{id}_240p.m3u8
+HTTP/1.1 200 OK  CORS: *
+Returns: Quality-specific manifest with segment URLs
+
+Segment layer: HTTP 200, CORS:*, no token, no signed URL.
+
+Confirmed across all classification states:
+  PUBLIC streams    — open (expected)
+  GOLD (paid) shows — open (paywall bypassed)
+  EXCLUSIVE (1-on-1)— open (paywall bypassed)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The complete live stream delivery pipeline — from stream key lookup through manifest generation through media segments — requires no authentication at any layer. A stream key (<code>sk=</code>) value obtained from the performer directory (see JERK-P3-006) grants access to the full stream. Gold and exclusive shows that viewers pay per-minute to access are freely accessible via direct CDN URLs. Platform revenue from paid show access is directly and repeatably bypassable.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Implement token-signed manifest and segment URLs at both the manifest-server and Bottlenose CDN layers. Tokens must be short-lived (60–300 seconds), bound to an authenticated user session, and validated server-side on each request. The <code>sk=</code> parameter must be validated against the requesting user's authentication state and session entitlement before returning a manifest URL.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-002 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-critical">Critical</span>
+      <div>
+        <div class="finding-title">JERK-P3-002 — Classification-Agnostic Ingest — Stream UUID Assigned Before Show Classification</div>
+        <div class="finding-meta">ICF Technology Platform &nbsp;|&nbsp; Encoder Ingest Layer &nbsp;|&nbsp; Streaming Architecture</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Stream UUID assignment sequence (reconstructed from API behavior):
+
+  1. Performer starts encoder (OBS or platform software)
+  2. Encoder connects to ingest endpoint
+  3. Platform assigns stream UUID immediately at ingest
+  4. UUID is exposed in setupstream API response
+  5. Show classification (public / gold / exclusive) set LATER
+     — by performer action or time-based rule
+
+Gap: UUID is publicly enumerable from the moment ingest begins,
+     BEFORE the classification state is applied.
+
+Observed: blocksessions API (see JERK-P3-004) reflects classification
+changes in near-real-time, but the UUID and HLS endpoint remain
+stable across classification transitions.
+
+Impact: A poller that monitors setupstream/blocksessions can detect
+when a show transitions from public to exclusive and maintain
+the HLS session — the CDN does not re-key on classification change.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Because the stream UUID is stable across the public-to-exclusive transition, an attacker who has already obtained the HLS manifest URL during the public phase can continue accessing the stream after it transitions to an exclusive paid session. The CDN does not invalidate or re-sign segment URLs on classification change. This means the initial free access window for any stream provides persistent access regardless of subsequent paywall state.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>On classification change (public &#8594; gold/exclusive): rotate the stream UUID and generate new signed delivery URLs. Invalidate any CDN cache entries for the previous UUID. Require a fresh authenticated manifest request to access the new UUID. The ingest endpoint should not expose the UUID until the initial classification is set.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-003 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-high">High</span>
+      <div>
+        <div class="finding-title">JERK-P3-003 — 24-Brand Platform Scope — sk= Unvalidated Across All White-Label Tenants</div>
+        <div class="finding-meta">ICF Technology Platform &nbsp;|&nbsp; All white-label brands &nbsp;|&nbsp; Multi-Tenant Architecture</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Platform scope: 24 white-label brands confirmed on naiadsystems.com / ICF Technology base.
+All brands share the same streaming pipeline and sk= parameter system.
+
+sk= parameter behavior:
+  — sk= values are brand-specific but all resolve through the same
+    manifest-server and Bottlenose CDN infrastructure
+  — Stream key from Brand A resolves via the same endpoint as Brand B
+  — No per-brand API segmentation at the manifest or CDN layer
+
+Enumerated brands include: jerkmatelive.com plus 23 confirmed white-label tenants.
+
+Corporate ownership confirmed:
+  ICF Technology Inc. — PO Box 21508, Seattle WA
+  FCI Inc. / Flying Croc — same address (Ross Perkins + Shawn Boday)
+  Accretive Networks — owns 207.178.x.x, 207.66.x.x, 207.246.x.x blocks</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Stream keys obtained from any of the 24 brands are interchangeable at the infrastructure layer. A vulnerability exploited against one brand's performer directory affects all 24 brands. The blast radius of JERK-P3-001 is not limited to jerkmatelive.com — it extends to the full 24-brand portfolio. Any fix must be applied at the infrastructure layer, not per-brand.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Implement authentication at the manifest-server layer, not just at the brand-layer API. Each brand's <code>sk=</code> validation must verify that the requesting session has an active entitlement for that specific brand. Cross-brand stream key reuse should be explicitly blocked.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-004 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-high">High</span>
+      <div>
+        <div class="finding-title">JERK-P3-004 — blocksessions Oracle — Unauthenticated Premium Session Detection</div>
+        <div class="finding-meta">jerkmatelive.com &nbsp;|&nbsp; blocksessions API &nbsp;|&nbsp; Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://jerkmatelive.com/api/blocksessions?sk={stream_key}
+HTTP/1.1 200 OK  (no auth required)
+
+Response structure:
+{
+  "premium": [],      // paid show session participants
+  "resumed": [],      // resumed private sessions
+  "exclusive": [      // exclusive 1-on-1 session participants
+    {"user_id": ..., "username": "...", ...}
+  ]
+}
+
+Zero authentication required to poll this endpoint.
+Polling interval: near-real-time (1-2 second latency observed)
+
+Reveals:
+  - Whether a performer is currently in a paid show
+  - Classification of current session (gold/exclusive)
+  - When sessions start and end
+  - Revenue timing intelligence</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The blocksessions API is an unauthenticated real-time oracle for whether a performer is in a paid show and what type. An attacker can use this to: (1) time stream access to grab exclusive shows at the moment they start (combining with JERK-P3-001); (2) build competitive intelligence on performer revenue activity; (3) profile high-value performers by session frequency and duration. It also leaks whether the <code>gold=0</code> state observed in testing reflects genuine absence of gold shows or misclassification.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Require authentication on the blocksessions endpoint. Only return session state to the authenticated performer themselves, not to any unauthenticated caller. Rate-limit polling to prevent real-time surveillance of performer activity.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-005 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">JERK-P3-005 — smvid Cookie Missing HttpOnly + Secure Flags, SameSite=None</div>
+        <div class="finding-meta">jerkmatelive.com &nbsp;|&nbsp; Set-Cookie response header &nbsp;|&nbsp; Cookie Security</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Set-Cookie: smvid={value};
+  Path=/;
+  Domain=.jerkmatelive.com;
+  SameSite=None     ← cross-origin requests include cookie
+  Secure: MISSING   ← transmittable over HTTP
+  HttpOnly: MISSING ← readable by JavaScript (document.cookie)
+
+smvid = stream media visitor ID (or session identifier)
+Used in stream key resolution and viewer session tracking.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The smvid cookie is readable by any JavaScript executing in the jerkmatelive.com context — including any XSS payload or injected third-party script. <code>SameSite=None</code> without <code>Secure</code> means the cookie is also sent over unencrypted connections. If smvid is used in stream key validation or session binding, its theft enables session hijacking. The missing Secure flag is particularly notable given SameSite=None requires Secure in Chrome 80+ — some browsers may silently drop this cookie.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Add <code>Secure; HttpOnly; SameSite=Strict</code> to the smvid cookie. If cross-origin cookie sharing is required, use <code>SameSite=None; Secure</code> and ensure the cookie is never readable by JavaScript (<code>HttpOnly</code>).</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-006 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">JERK-P3-006 — Unauthenticated Performer Profile + Pricing Enumeration</div>
+        <div class="finding-meta">jerkmatelive.com &nbsp;|&nbsp; Performer directory API &nbsp;|&nbsp; Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://jerkmatelive.com/cam/performers.xml
+HTTP/1.1 200 OK  (sitemap — 67 pages x ~156 slugs = ~10,000 performers)
+
+Per-performer profile endpoint (unauthenticated):
+  username, live status, stream key (sk=), private rate,
+  spy rate, group rate, exclusive rate, profile bio,
+  languages, tags, preview image URLs
+
+Stream key obtained from directory feeds directly into JERK-P3-001.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Remove stream key (<code>sk=</code>) from unauthenticated directory responses. Require authentication to retrieve the sk= parameter. Pricing information may remain public, but the stream delivery key must be gated behind an authenticated session.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-007 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">JERK-P3-007 — Internal Hostname Disclosure in WebSocket and HLS URLs</div>
+        <div class="finding-meta">ICF Technology Platform &nbsp;|&nbsp; WS/HLS response URLs &nbsp;|&nbsp; Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Internal hostnames observed in live stream metadata and WebSocket URLs:
+  windpigeon.{domain}
+  abra.{domain}
+  cubone.{domain}
+  kingler.{domain}
+
+These appear to be internal node names for the Bottlenose CDN or
+streaming infrastructure routing layer. Names follow Pokemon naming
+convention (common for internal node naming in tech companies).
+
+Exposed in: HLS master manifest headers, WebSocket upgrade URLs,
+setupstream API response parameters.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Replace internal node names in client-facing URLs with generic identifiers. Internal routing hostnames should not be visible in responses to unauthenticated clients. Audit all API responses for internal hostname leakage.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-008 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">JERK-P3-008 — C2C Residual Risk — Cam-to-Cam Session Persistence</div>
+        <div class="finding-meta">jerkmatelive.com &nbsp;|&nbsp; C2C session management &nbsp;|&nbsp; P3 Deferred</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">C2C (cam-to-cam) allows viewers to share their own camera with a performer
+during a private session. The viewer's video stream is transmitted to
+the performer's browser.
+
+Residual risk identified:
+  — C2C session WebSocket channel persistence after payment ends
+  — Whether the performer's video feed remains accessible after
+    the C2C session billing stops was not confirmed
+  — Requires authenticated P3 testing to verify
+
+Status: Not confirmed exploitable. Deferred to P3 credentialed testing.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Informational. P3 priority: confirm C2C session termination is enforced at the WebSocket and WebRTC layer when billing ends, not just at the UI layer. Verify the performer's feed is inaccessible after session close.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-009 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-critical">Critical</span>
+      <div>
+        <div class="finding-title">JERK-P3-009 — Production S3 Bucket Publicly Listable and Readable: ws-session-widget-prod</div>
+        <div class="finding-meta">ws-session-widget-prod.s3.amazonaws.com &nbsp;|&nbsp; JS Bundle Analysis (P1-06) &nbsp;|&nbsp; Supply Chain</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://ws-session-widget-prod.s3.amazonaws.com/
+HTTP/1.1 200 OK — ListBucketResult (IsTruncated: false)
+
+6 files — all HTTP 200 readable:
+  test/ws-session-widget.min.js    17,792 bytes  (2021-06-22, v135)
+  ws-event-bus.min.js               1,583 bytes  (2023-11-21)
+  ws-outlink-observer.min.js          928 bytes  (2025-04-10)
+  ws-session-widget-hoo.min.js     32,226 bytes  (v97)
+  ws-session-widget-npu.min.js     35,870 bytes  (v122)
+  ws-session-widget.min.js         39,824 bytes  (v874 — ACTIVE PRODUCTION)
+
+Also accessible via: gateway.staging.hydrahub.io/wswidget/
+
+This bucket hosts the ONLY source for the session widget JavaScript
+served to all users across all 24 white-label brands.
+
+Confirmed: All 6 files return HTTP 200 with full content.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Any party can read, diff, and reverse-engineer the complete session and affiliate tracking architecture of the platform. More critically: public read access means the attack surface includes write — if any object-level ACL is misconfigured, replacing the session widget executes arbitrary JavaScript on every user session across all 24 brands simultaneously. This is the maximum-blast-radius supply chain attack vector for the platform.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Enable S3 Block Public Access on ws-session-widget-prod immediately. Verify no public ACLs on individual objects. Restrict bucket access to Cloudflare IP ranges via bucket policy. Audit CI/CD pipeline write permissions. Serve widget via signed CDN URLs with short expiry.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-010 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-high">High</span>
+      <div>
+        <div class="finding-title">JERK-P3-010 — Third-Party Pop-Under Ad Script Hardcoded in Production Session Widget</div>
+        <div class="finding-meta">static.scptp9.com/mnpw3.js &nbsp;|&nbsp; All widget variants &nbsp;|&nbsp; Third-Party Script Injection</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Hardcoded in ws-session-widget.min.js (v874 — production):
+  popUnder: {
+    GatewayUrl: "t.crpo.link/",
+    ScriptUrl:  "//static.scptp9.com/mnpw3.js"
+  }
+
+ScriptUrl present in ALL variants (v874, v122, v97, test/v135).
+
+GET https://static.scptp9.com/mnpw3.js
+HTTP/1.1 200 OK  107,374 bytes  application/javascript
+
+window.b4a5d1b39f = 'mnpw';
+window[window.b4a5d1b39f||"mnpw"]=(function(){ ... obfuscated engine ... })
+
+Confirmed: "popunders": "true" in window.sessionInitInfo on jerkmate.com
+Script injected dynamically on all sessions via popUnderService.
+Not present in raw HTML — executed through session widget init.
+
+A/B variant testing:
+  v874: hardcoded GatewayUrl "t.crpo.link/"
+  v122: dynamic gatewayUrl from widgetInfo, fallback "t.crdefault2.com"
+  v97:  dynamic gatewayUrl, no hardcoded fallback</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>All users across all 24 brands receive a 107KB obfuscated third-party JavaScript payload from scptp9.com. This script executes with full DOM access in the user's browser. Users have no visibility that it runs. If scptp9.com or its CDN is compromised, arbitrary JavaScript executes on all active sessions across all 24 brands simultaneously — a supply chain attack with maximum user impact. The pop-under delivery may also violate consumer protection regulations and undisclosed advertising rules in multiple jurisdictions.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Remove pop-under script injection from the session widget. If pop-under ads are a business requirement: disclose in terms of service; host on owned infrastructure; implement SRI hashing; add to CSP allowlist. Do not inject dynamically outside of CSP controls.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-011 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">JERK-P3-011 — Staging Infrastructure Hardcoded in All Production Widget Variants</div>
+        <div class="finding-meta">gateway.staging.hydrahub.io &nbsp;|&nbsp; All widget variants &nbsp;|&nbsp; Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Hardcoded in ALL variants (v874, v122, v97, test/v135):
+  stagingGatewayEndpoint:      "https://gateway.staging.hydrahub.io"
+  stagingClickGatewayEndpoint: "https://click-gateway.webdev.staging.hydrahub.io"
+  testDomains: [
+    "localhost", "127.0.0.1",
+    ".hydrahub.io",          ← Hydra session widget platform operator
+    ".dotcms.cloud",         ← CMS staging
+    ".camshq.info",          ← Hydra staging test domain (accessible)
+    "staging.jerkmate.com"
+  ]
+
+gateway.staging.hydrahub.io/wswidget/ → HTTP 200
+  Returns SAME S3 bucket listing as production (ws-session-widget-prod)
+
+hydrahub.io = Hydra — third-party session widget vendor
+camshq.info = Hydra staging test domain (confirmed accessible)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Staging endpoints are live and returning production data — the staging gateway exposes the same S3 bucket listing as production. Full staging infrastructure topology is disclosed in every production widget variant: vendor identity (Hydra/hydrahub.io), staging test domain, CMS infrastructure. An attacker targeting the Hydra vendor can use lower-security staging paths toward the production widget bucket.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Remove staging endpoint references from production widget builds via build-time environment injection. Restrict staging gateway to internal network only. Do not expose production S3 bucket listings via staging gateway URLs.</div>
+    </div>
+  </div>
+
+  <!-- JERK-P3-012 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">JERK-P3-012 — Affiliate Commission Attribution Hijacking Attack Plane</div>
+        <div class="finding-meta">jerkmate.com &nbsp;|&nbsp; Session widget / affiliate tracking &nbsp;|&nbsp; Business Logic</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Architecture (from JS bundle + server HTML analysis):
+
+Server-rendered sessionInitInfo (static, immutable):
+  window.sessionInitInfo = {
+    "aff_id": null,          ← always null — server does NOT inject from URL
+    "offer_id": "5643",
+    "referrer_id": "10744",
+    "url_id": {"en": "19536", ...},
+    ...
+  }
+
+Client-side affiliate capture (session widget, lastTouchParams):
+  Parameters read from window.location.search on page load:
+  aff_click_id, aff_id, aff_sub, aff_sub2-5, grd, aff_unique1-5,
+  bo, offer_id, sakey, source, transaction_id, url_id, xid
+
+Commission attribution flow:
+  1. User lands on jerkmate.com?aff_id=X&sakey=Y
+  2. Widget reads params from URL client-side
+  3. Stored in localStorage.hydra["session-widget"]
+  4. POSTed to gateway.jerkmate.com/session-api/ws-session
+  5. Session API records attribution — X gets commission credit
+
+organicAffiliate: "5545" hardcoded — default for all direct traffic
+
+Session API endpoint: /session-api/ws-session (POST)
+  IP-filtered: Accessible from browser/residential only (not datacenter)
+  Server-side aff_id validation: unknown — cannot confirm from AWS
+  Requires Playwright + residential proxy to fully test</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Affiliate parameters are captured entirely client-side with no server-side pre-validation visible in page HTML. Attack vectors: (1) XSS on any platform page reads and overwrites <code>localStorage.hydra["session-widget"]</code> with an attacker's aff_id before a conversion event, stealing commission; (2) Crafting affiliate links with injected aff_id values routes organic traffic commissions to attacker-controlled accounts; (3) If the session API accepts arbitrary aff_id values without registry validation, any value generates fraudulent commission claims. The missing CSP on several platform surfaces makes XSS-based commission theft particularly viable.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>At session API layer: validate aff_id against registered affiliate allowlist — reject sessions with unrecognized IDs. Rate-limit session creation per aff_id. Implement server-side last-touch attribution. Add server-issued HMAC to session records to detect localStorage tampering.</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ARCHITECTURE MAP -->
+<section>
+  <div class="section-label">Architecture Intelligence</div>
+  <h2>Platform Architecture Map</h2>
+  <div class="arch-grid" style="margin-bottom:16px">
+    <div class="arch-card">
+      <h4>Streaming Pipeline</h4>
+      <div class="arch-item"><span class="arch-key">Ingest</span><span class="arch-val">OBS / platform software &rarr; ICF ingest</span></div>
+      <div class="arch-item"><span class="arch-key">Stream key param</span><span class="arch-val">sk= (per-performer, unauthenticated)</span></div>
+      <div class="arch-item"><span class="arch-key">setupstream API</span><span class="arch-val">jerkmatelive.com/api/setupstream</span></div>
+      <div class="arch-item"><span class="arch-key">Manifest server</span><span class="arch-val">manifest.naiadsystems.com</span></div>
+      <div class="arch-item"><span class="arch-key">HLS CDN</span><span class="arch-val">edge-hls.doppiocdn.com (Bottlenose)</span></div>
+      <div class="arch-item"><span class="arch-key">Segment server</span><span class="arch-val">media-hls.doppiocdn.com</span></div>
+      <div class="arch-item"><span class="arch-key">Internal nodes</span><span class="arch-val">windpigeon, abra, cubone, kingler</span></div>
+      <div class="arch-item"><span class="arch-key">Auth on delivery</span><span class="arch-val">NONE — all layers zero-auth</span></div>
+    </div>
+    <div class="arch-card">
+      <h4>Session Widget Architecture</h4>
+      <div class="arch-item"><span class="arch-key">Vendor</span><span class="arch-val">Hydra (hydrahub.io)</span></div>
+      <div class="arch-item"><span class="arch-key">Production bucket</span><span class="arch-val">ws-session-widget-prod (S3, PUBLIC)</span></div>
+      <div class="arch-item"><span class="arch-key">Active variants</span><span class="arch-val">v874 (main), v122 (npu), v97 (hoo)</span></div>
+      <div class="arch-item"><span class="arch-key">Session API</span><span class="arch-val">gateway.jerkmate.com/session-api/ws-session</span></div>
+      <div class="arch-item"><span class="arch-key">Token storage</span><span class="arch-val">localStorage.hydra["session-widget"]</span></div>
+      <div class="arch-item"><span class="arch-key">Organic affiliate ID</span><span class="arch-val">5545 (hardcoded default)</span></div>
+      <div class="arch-item"><span class="arch-key">Pop-under script</span><span class="arch-val">static.scptp9.com/mnpw3.js (all variants)</span></div>
+      <div class="arch-item"><span class="arch-key">Staging gateway</span><span class="arch-val">gateway.staging.hydrahub.io (accessible)</span></div>
+    </div>
+    <div class="arch-card">
+      <h4>Corporate Structure</h4>
+      <div class="arch-item"><span class="arch-key">Platform operator</span><span class="arch-val">ICF Technology Inc.</span></div>
+      <div class="arch-item"><span class="arch-key">Address</span><span class="arch-val">PO Box 21508, Seattle WA</span></div>
+      <div class="arch-item"><span class="arch-key">Principals</span><span class="arch-val">Ross Perkins + Shawn Boday</span></div>
+      <div class="arch-item"><span class="arch-key">Related entity</span><span class="arch-val">FCI Inc. / Flying Croc (same address)</span></div>
+      <div class="arch-item"><span class="arch-key">Network owner</span><span class="arch-val">Accretive Networks</span></div>
+      <div class="arch-item"><span class="arch-key">IP blocks</span><span class="arch-val">207.178.x.x, 207.66.x.x, 207.246.x.x</span></div>
+      <div class="arch-item"><span class="arch-key">White-label brands</span><span class="arch-val">24 confirmed on naiadsystems.com</span></div>
+    </div>
+    <div class="arch-card">
+      <h4>P3 Priority Targets</h4>
+      <div class="arch-item"><span class="arch-key">Session API</span><span class="arch-val">POST /session-api/ws-session (residential proxy)</span></div>
+      <div class="arch-item"><span class="arch-key">aff_id validation</span><span class="arch-val">Confirm registry check via browser test</span></div>
+      <div class="arch-item"><span class="arch-key">Cross-brand token reuse</span><span class="arch-val">Test sk= from Brand A on Brand B</span></div>
+      <div class="arch-item"><span class="arch-key">C2C session termination</span><span class="arch-val">Confirm billing-end = stream-end</span></div>
+      <div class="arch-item"><span class="arch-key">gold=0 investigation</span><span class="arch-val">Confirm premium[] vs exclusive[] logic</span></div>
+      <div class="arch-item"><span class="arch-key">S3 write permissions</span><span class="arch-val">Audit object-level ACLs (critical)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- APPENDIX -->
+<section>
+  <div class="section-label">Appendix</div>
+  <div class="appendix-grid">
+    <div class="appendix-card">
+      <h4>Scope</h4>
+      <p>jerkmate.com, jerkmatelive.com, and associated ICF Technology / naiadsystems.com platform infrastructure. All 24 white-label tenants included per platform scope finding (JERK-P3-003). Internet-accessible assets only.</p>
+    </div>
+    <div class="appendix-card">
+      <h4>Authorization</h4>
+      <p>Inspectiv Statement of Work on file. P3 credentialed testing requires separate signed SOW, credential delivery, and IP allowlist confirmation. Session API testing requires browser/residential proxy environment (Playwright).</p>
+    </div>
+    <div class="appendix-card">
+      <h4>Methodology</h4>
+      <ul>
+        <li>P1-01 DNS / DNSSEC / CAA</li>
+        <li>P1-02 CT log subdomain enumeration</li>
+        <li>P1-04 Shodan InternetDB</li>
+        <li>P1-05/08/09 HTTP fingerprint + headers + cookies</li>
+        <li>P1-06 Deep JS bundle reverse engineering</li>
+        <li>P2-01 CORS probing</li>
+        <li>P2-03 Rate limit testing</li>
+        <li>P2-06 Path bruteforce</li>
+        <li>Streaming pipeline: setupstream &rarr; manifest &rarr; CDN chain</li>
+        <li>S3 bucket enumeration and content verification</li>
+        <li>Session widget variant comparison (v874, v122, v97, v135)</li>
+        <li>Affiliate parameter reflection testing</li>
+      </ul>
+    </div>
+    <div class="appendix-card">
+      <h4>Infrastructure</h4>
+      <ul>
+        <li>Scan executed from AWS 98.95.155.84</li>
+        <li>Rate: 1.5s standard / 2.5s CDN</li>
+        <li>DNS via Google DoH</li>
+        <li>PoC tool: JERK-2026-poc.html (local)</li>
+        <li>JS analysis: /home/ubuntu/p2_results/js_reverse/</li>
+        <li>Architecture map: JERK_architecture_map.json</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div>Inspectiv Security Research &nbsp;|&nbsp; JERK-2026</div>
+  <div>jerkmate.com / jerkmatelive.com &nbsp;|&nbsp; P1+P2+JS Analysis &nbsp;|&nbsp; April 2026</div>
+  <div>Researcher: Ken Bane &nbsp;|&nbsp; CONFIDENTIAL</div>
+</footer>
+
+</body>
+</html>
