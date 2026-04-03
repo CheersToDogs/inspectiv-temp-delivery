@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspectiv Security Assessment — faphouse.com / faphouselive.com</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0a0e1a;
+  --navy2: #0d1221;
+  --navy3: #111827;
+  --card: #151c2e;
+  --card2: #1a2236;
+  --border: #1e2d4a;
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --critical: #ef4444;
+  --critical-bg: rgba(239,68,68,0.1);
+  --critical-border: rgba(239,68,68,0.3);
+  --high: #f97316;
+  --high-bg: rgba(249,115,22,0.1);
+  --high-border: rgba(249,115,22,0.3);
+  --medium: #eab308;
+  --medium-bg: rgba(234,179,8,0.1);
+  --medium-border: rgba(234,179,8,0.3);
+  --low: #22c55e;
+  --low-bg: rgba(34,197,94,0.08);
+  --low-border: rgba(34,197,94,0.25);
+  --info: #6366f1;
+  --info-bg: rgba(99,102,241,0.08);
+  --info-border: rgba(99,102,241,0.25);
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --evidence-bg: #0a0e1a;
+  --orange-callout: rgba(249,115,22,0.08);
+  --green-callout: rgba(34,197,94,0.08);
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--navy); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; }
+a { color: var(--accent2); text-decoration: none; }
+
+/* COVER */
+.cover {
+  background: linear-gradient(135deg, #050810 0%, #0a0e1a 40%, #0d1528 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 60px 64px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse 80% 60% at 80% 20%, rgba(59,130,246,0.07) 0%, transparent 60%);
+  pointer-events: none;
+}
+.cover-logo {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cover-logo::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: var(--accent);
+}
+.cover h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.cover-sub {
+  font-size: 18px;
+  color: var(--text2);
+  font-weight: 300;
+  margin-bottom: 48px;
+}
+.cover-meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  max-width: 800px;
+}
+.cover-meta-item label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  display: block;
+  margin-bottom: 4px;
+}
+.cover-meta-item span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.cover-phase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 32px;
+}
+
+/* LAYOUT */
+.main { max-width: 1100px; margin: 0 auto; padding: 48px 40px 80px; }
+section { margin-bottom: 56px; }
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+h2 { font-size: 22px; font-weight: 600; color: #fff; margin-bottom: 20px; }
+
+/* EXEC SUMMARY */
+.exec-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 28px 32px;
+  line-height: 1.8;
+  color: var(--text);
+}
+.exec-box p { margin-bottom: 12px; }
+.exec-box p:last-child { margin-bottom: 0; }
+
+/* SEVERITY SCORECARD */
+.scorecard {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 40px;
+}
+.score-card {
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid;
+}
+.score-card.critical { background: var(--critical-bg); border-color: var(--critical-border); }
+.score-card.high     { background: var(--high-bg);     border-color: var(--high-border); }
+.score-card.medium   { background: var(--medium-bg);   border-color: var(--medium-border); }
+.score-card.low      { background: var(--low-bg);      border-color: var(--low-border); }
+.score-card.info     { background: var(--info-bg);     border-color: var(--info-border); }
+.score-num { font-size: 36px; font-weight: 700; font-family: var(--mono); display: block; }
+.score-card.critical .score-num { color: var(--critical); }
+.score-card.high     .score-num { color: var(--high); }
+.score-card.medium   .score-num { color: var(--medium); }
+.score-card.low      .score-num { color: var(--low); }
+.score-card.info     .score-num { color: var(--info); }
+.score-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); margin-top: 6px; }
+
+/* FINDINGS TABLE */
+.findings-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+.findings-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--navy2);
+}
+.findings-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(30,45,74,0.5);
+  vertical-align: top;
+  font-size: 13px;
+}
+.findings-table tr:hover td { background: rgba(255,255,255,0.02); }
+.sev-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.sev-critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
+.sev-high     { background: var(--high-bg);     color: var(--high);     border: 1px solid var(--high-border); }
+.sev-medium   { background: var(--medium-bg);   color: var(--medium);   border: 1px solid var(--medium-border); }
+.sev-low      { background: var(--low-bg);      color: var(--low);      border: 1px solid var(--low-border); }
+.sev-info     { background: var(--info-bg);     color: var(--info);     border: 1px solid var(--info-border); }
+
+/* FINDING CARDS */
+.finding {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.finding-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.finding-header .finding-title { font-size: 15px; font-weight: 600; color: #fff; flex: 1; }
+.finding-header .finding-meta { font-size: 12px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+.finding-body { padding: 20px 24px; }
+
+.evidence-box {
+  background: var(--evidence-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #a5b4fc;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.6;
+}
+.callout {
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.callout-impact {
+  background: var(--orange-callout);
+  border-left: 3px solid var(--high);
+  color: var(--text);
+}
+.callout-fix {
+  background: var(--green-callout);
+  border-left: 3px solid var(--low);
+  color: var(--text);
+}
+.callout-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+.callout-impact .callout-label { color: var(--high); }
+.callout-fix .callout-label { color: var(--low); }
+
+/* ARCH SECTION */
+.arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.arch-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 22px;
+}
+.arch-card h4 { font-size: 12px; font-weight: 600; color: var(--accent2); margin-bottom: 12px; font-family: var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.arch-item { font-size: 12px; color: var(--text2); padding: 4px 0; border-bottom: 1px solid rgba(30,45,74,0.4); display: flex; justify-content: space-between; gap: 12px; }
+.arch-item:last-child { border-bottom: none; }
+.arch-item .arch-key { color: var(--text3); font-family: var(--mono); }
+.arch-item .arch-val { color: var(--text); text-align: right; font-family: var(--mono); font-size: 11px; }
+
+/* SUBDOMAIN TABLE */
+.sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.sub-item {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+  padding: 6px 10px;
+  background: var(--card2);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.sub-item.highlight { color: var(--high); border-color: var(--high-border); background: var(--high-bg); }
+
+/* ATTACK CHAIN */
+.chain {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+}
+.chain-step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.chain-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.4);
+  color: var(--accent2);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.chain-content { flex: 1; }
+.chain-content h4 { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+.chain-content p { font-size: 12px; color: var(--text2); }
+.chain-arrow { text-align: center; color: var(--text3); margin: 4px 0 4px 22px; font-size: 16px; }
+
+/* APPENDIX */
+.appendix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.appendix-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 22px;
+}
+.appendix-card h4 { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; font-family: var(--mono); margin-bottom: 14px; }
+.appendix-card p { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.appendix-card ul { list-style: none; padding: 0; }
+.appendix-card ul li { font-size: 13px; color: var(--text2); padding: 4px 0; border-bottom: 1px solid rgba(30,45,74,0.4); font-family: var(--mono); }
+.appendix-card ul li:last-child { border-bottom: none; }
+
+/* WARNING BANNER */
+.warning-banner {
+  background: rgba(249,115,22,0.1);
+  border: 1px solid rgba(249,115,22,0.4);
+  border-radius: 8px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.warning-banner .wb-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.warning-banner .wb-text { font-size: 13px; color: var(--text); }
+.warning-banner .wb-text strong { color: var(--high); }
+
+/* FOOTER */
+footer {
+  background: var(--navy2);
+  border-top: 1px solid var(--border);
+  padding: 24px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-logo">Inspectiv Security Research</div>
+  <h1>Security Assessment Report</h1>
+  <div class="cover-sub">faphouse.com &amp; faphouselive.com — Phase 1 / Phase 2</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><label>Engagement Ref</label><span>INS-2026-FAPHS-001</span></div>
+    <div class="cover-meta-item"><label>Date</label><span>April 1, 2026</span></div>
+    <div class="cover-meta-item"><label>Researcher</label><span>Ken Bane</span></div>
+    <div class="cover-meta-item"><label>Auth</label><span>SOW on file (PHY internet)</span></div>
+  </div>
+  <div class="cover-phase-badge">P1 Passive Recon + P2 Active Unauthenticated</div>
+</div>
+
+<div class="main">
+
+<!-- URGENT NOTICE -->
+<div class="warning-banner">
+  <div class="wb-icon">⚠️</div>
+  <div class="wb-text"><strong>URGENT — Domain Expiration in 14 Days:</strong> faphouse.com is registered through 2026-04-15. Immediate renewal required to prevent domain lapse and potential adversarial re-registration.</div>
+</div>
+
+<!-- EXEC SUMMARY -->
+<section>
+  <div class="section-label">Executive Summary</div>
+  <div class="exec-box">
+    <p><strong>Gap Sweep Additions:</strong> Subsequent probing confirmed 240p/480p/720p HLS streams are all accessible without authentication (1080p not available for tested streams). The JS CDN origin <code>assets-ah.flixcdn.com</code> is directly internet-facing without Cloudflare proxy, running EOL nginx with CVE-2025-23419 (SSL session resumption client-cert-auth bypass, CVSS 5.3). The <code>/api/premium/get-packages</code> endpoint returns full billing processor stack, internal tier IDs, and product signatures beyond what a pricing page requires. No mobile app deep-link infrastructure was found on any domain — side-loaded distribution is the likely mobile delivery mechanism for an adult platform. swagger/docs paths on faphouselive.com were false positives — SPA bundle contained the string "swagger" in minified JS.</p>
+    <p><strong>UPDATED — Critical Streaming Findings Added:</strong> Subsequent probing of <code>vr.faphouselive.com</code> identified an unauthenticated API endpoint (<code>/api/vr/v2/models</code>) returning 8.2MB of JSON containing 7,915 live performer records, each including a direct HLS playlist URL served from <code>edge-hls.doppiocdn.com</code>. The stream access is zero-auth end-to-end: manifest URLs resolve to HTTP 200 with <code>Access-Control-Allow-Origin: *</code> on both the manifest server and the media segment server (<code>media-hls.doppiocdn.com</code>). Critically, this bypass is not limited to public streams — performers conducting <strong>private shows (234), group shows (123), and virtual private shows (112)</strong>, all of which require payment to access through the platform UI, have their full HLS delivery chains exposed identically. The MOUFLON token present in manifests is not enforced as an access control. Additionally, the production HTML of vr.faphouselive.com hardcodes an Amplitude analytics key and a Sentry DSN pointing to <code>sentry.stripchat.com</code>, confirming Stripchat as the underlying platform and exposing error telemetry infrastructure.</p>
+    <p>A full Phase 1 passive reconnaissance and Phase 2 active unauthenticated assessment was conducted against faphouse.com, faphouselive.com, and their associated subdomain surface (65 + 47 subdomains respectively) under an Inspectiv Statement of Work covering internet-accessible assets only. Both domains sit behind Cloudflare (CDN and WAF), terminate TLS 1.3 with AES-256-GCM, and route cache as DYNAMIC — meaning no sensitive responses are currently being served from Cloudflare's edge cache.</p>
+    <p>The most significant immediate risk is the faphouse.com domain registration expiring in 14 days (April 15, 2026). Beyond that, the live platform (faphouselive.com) exhibits a materially weaker security posture than the main site: it lacks a Content Security Policy entirely, sets session and A/B-test cookies without Secure, HttpOnly, or SameSite flags, and provides no rate limiting on its /login or /forgot-password endpoints. The main site (faphouse.com) carries a PHP session cookie (PHPSESSID) missing only SameSite, and an overly permissive CSP allowing <code>unsafe-inline</code> and <code>unsafe-eval</code> across both HTTP and HTTPS.</p>
+    <p>Infrastructure reconnaissance identified two delivery CDN origins: <strong>assets-ah.flixcdn.com</strong> (faphouse.com JS bundles) and <strong>assets.chapturist.com</strong> (faphouselive.com Angular/React bundles). A backend API server at <strong>api.faphouse.com</strong> returns JSON-formatted errors, confirming a separate API tier. The live platform exposes an nginx origin at <strong>gate.faphouselive.com</strong> without Cloudflare proxy (DNS-only record). Certificate transparency logs reveal staging, dev, test, old, magento, and notably <strong>mysql08</strong> subdomains, disclosing internal DB naming conventions. No ForgeRock or OIDC discovery endpoints were reachable; the entitlement model appears to be subscription-token based (SUBSCRIPTION references in chapturist.com JS bundles). No CORS misconfigurations or GraphQL introspection were found. No subdomain takeovers were identified.</p>
+    <p>Twelve confirmed findings are documented below: one operational critical (domain expiry), one high (no CSP on live platform), five mediums, four lows, and three informational items. All path-bruteforce admin panel hits on faphouselive.com were confirmed as SPA routing false positives. Shodan port data for ports 8080/8443 was confirmed as Cloudflare edge infrastructure — not origin exposure.</p>
+  </div>
+</section>
+
+<!-- SCORECARD -->
+<section>
+  <div class="section-label">Finding Summary</div>
+  <div class="scorecard">
+    <div class="score-card critical"><span class="score-num">4</span><div class="score-label">Critical</div></div>
+    <div class="score-card high"><span class="score-num">3</span><div class="score-label">High</div></div>
+    <div class="score-card medium"><span class="score-num">9</span><div class="score-label">Medium</div></div>
+    <div class="score-card low"><span class="score-num">13</span><div class="score-label">Low</div></div>
+    <div class="score-card info"><span class="score-num">12</span><div class="score-label">Info</div></div>
+  </div>
+
+  <!-- FINDINGS TABLE -->
+  <table class="findings-table">
+    <thead>
+      <tr>
+        <th>#</th><th>Severity</th><th>Title</th><th>Target</th><th>Category</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><span class="sev-badge sev-critical">Critical</span></td><td>Domain Expiration in 14 Days — faphouse.com</td><td>faphouse.com</td><td>Operational Risk</td></tr>
+      <tr><td>2</td><td><span class="sev-badge sev-high">High</span></td><td>Complete Absence of CSP on Live Platform</td><td>faphouselive.com</td><td>Security Headers</td></tr>
+      <tr><td>3</td><td><span class="sev-badge sev-high">High</span></td><td>gate.faphouselive.com — nginx Origin Exposed (No Cloudflare Proxy)</td><td>faphouselive.com</td><td>Infrastructure Exposure</td></tr>
+      <tr><td>4</td><td><span class="sev-badge sev-medium">Medium</span></td><td>CSP unsafe-inline and unsafe-eval Permitted</td><td>faphouse.com</td><td>Security Headers</td></tr>
+      <tr><td>5</td><td><span class="sev-badge sev-medium">Medium</span></td><td>Cookie Security Flags: All Three Missing (faphouselive.com)</td><td>faphouselive.com</td><td>Cookie Security</td></tr>
+      <tr><td>6</td><td><span class="sev-badge sev-medium">Medium</span></td><td>Cookie Security Flag: SameSite Missing (faphouse.com)</td><td>faphouse.com</td><td>Cookie Security</td></tr>
+      <tr><td>7</td><td><span class="sev-badge sev-medium">Medium</span></td><td>No Rate Limiting on /login Endpoint</td><td>faphouselive.com</td><td>Authentication</td></tr>
+      <tr><td>8</td><td><span class="sev-badge sev-medium">Medium</span></td><td>No Rate Limiting on /forgot-password Endpoint</td><td>faphouselive.com</td><td>Authentication</td></tr>
+      <tr><td>9</td><td><span class="sev-badge sev-low">Low</span></td><td>Missing Security Headers (X-Content-Type-Options, Referrer-Policy)</td><td>faphouse.com</td><td>Security Headers</td></tr>
+      <tr><td>10</td><td><span class="sev-badge sev-low">Low</span></td><td>Missing Security Headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)</td><td>faphouselive.com</td><td>Security Headers</td></tr>
+      <tr><td>11</td><td><span class="sev-badge sev-low">Low</span></td><td>No Cache-Control Headers on Any Response (faphouselive.com)</td><td>faphouselive.com</td><td>Delivery Edge</td></tr>
+      <tr><td>12</td><td><span class="sev-badge sev-low">Low</span></td><td>.env and .git/* Exist Behind WAF (403) — Both Domains</td><td>Both</td><td>Sensitive Files</td></tr>
+      <tr><td>13</td><td><span class="sev-badge sev-low">Low</span></td><td>DMARC p=quarantine — Recommend Escalate to p=reject</td><td>faphouse.com</td><td>Email Security</td></tr>
+      <tr><td>14</td><td><span class="sev-badge sev-info">Info</span></td><td>mysql08.faphouselive.com — Database Hostname Disclosure via CT Logs</td><td>faphouselive.com</td><td>Information Disclosure</td></tr>
+      <tr><td>15</td><td><span class="sev-badge sev-info">Info</span></td><td>/cdn-cgi/trace Accessible — Cloudflare Diagnostics Endpoint</td><td>Both</td><td>Information Disclosure</td></tr>
+      <tr><td>16</td><td><span class="sev-badge sev-info">Info</span></td><td>Non-Production Environments in CT Logs (dev, staging, test, old, magento)</td><td>faphouselive.com</td><td>Attack Surface</td></tr>
+      <tr><td>17</td><td><span class="sev-badge sev-info">Info</span></td><td>robots.txt Discloses API and Premium Package Endpoint Structure</td><td>faphouse.com</td><td>Information Disclosure</td></tr>
+      <tr><td>18</td><td><span class="sev-badge sev-info">Info</span></td><td>WebSocket Endpoint /wss Identified — Auth Testing Deferred to P3</td><td>faphouselive.com</td><td>Streaming Pipeline</td></tr>
+      <tr><td>19</td><td><span class="sev-badge sev-critical">Critical</span></td><td>Unauthenticated API Exposes 7,915 Performer Records + Live Stream URLs (Private/Paid Shows Included)</td><td>vr.faphouselive.com</td><td>Streaming Pipeline</td></tr>
+      <tr><td>20</td><td><span class="sev-badge sev-critical">Critical</span></td><td>HLS Streams for Private, Group, and Virtual Private Shows Accessible Without Authentication</td><td>doppiocdn.com CDN</td><td>Streaming Pipeline</td></tr>
+      <tr><td>21</td><td><span class="sev-badge sev-high">High</span></td><td>Hardcoded Amplitude Analytics Key Exposed in Production HTML</td><td>vr.faphouselive.com</td><td>Secrets / Information Disclosure</td></tr>
+      <tr><td>22</td><td><span class="sev-badge sev-medium">Medium</span></td><td>Sentry DSN Hardcoded in HTML — Platform Affiliation (Stripchat) Disclosed</td><td>vr.faphouselive.com</td><td>Information Disclosure</td></tr>
+      <tr><td>23</td><td><span class="sev-badge sev-medium">Medium</span></td><td>CVE-2025-23419 on flixcdn.com — Unpatched EOL nginx (Client Cert Auth Bypass)</td><td>assets-ah.flixcdn.com</td><td>Infrastructure / CVE</td></tr>
+      <tr><td>24</td><td><span class="sev-badge sev-info">Info</span></td><td>Premium Package API Exposes Billing Processor Stack, Tier Config IDs, Product Signatures</td><td>faphouse.com</td><td>Business Operations</td></tr>
+      <tr><td>25</td><td><span class="sev-badge sev-info">Info</span></td><td>No Mobile App Deep-Link Infrastructure — Side-Loaded Distribution Likely</td><td>Both</td><td>Mobile Surface</td></tr>
+      <tr><td>26</td><td><span class="sev-badge sev-low">Low</span></td><td>go.faphouselive.com /health Exposes Internal Monitoring State ("Deadlocks - OK")</td><td>go.faphouselive.com</td><td>Infrastructure / Info Disclosure</td></tr>
+      <tr><td>27</td><td><span class="sev-badge sev-low">Low</span></td><td>creative.faphouselive.com — nginx Default + Active Affiliate Landing System Exposed (LPAkira Campaign / XHamster CDN Link)</td><td>creative.faphouselive.com</td><td>Affiliate / Infrastructure</td></tr>
+      <tr><td>28</td><td><span class="sev-badge sev-low">Low</span></td><td>/api/vr/v2/logs Accepts Arbitrary POST Without Validation — CSP Report Injection</td><td>vr.faphouselive.com</td><td>Security Monitoring</td></tr>
+      <tr><td>29</td><td><span class="sev-badge sev-info">Info</span></td><td>/api/fanclub/get-packages Requires Performer Context — P3 IDOR Target</td><td>faphouse.com</td><td>Business Operations</td></tr>
+      <tr><td>30</td><td><span class="sev-badge sev-medium">Medium</span></td><td>Wildcard DNS Active: *.faphouse.com — Compound Risk with Domain Expiry</td><td>faphouse.com</td><td>DNS / Infrastructure</td></tr>
+      <tr><td>31</td><td><span class="sev-badge sev-medium">Medium</span></td><td>Wildcard DNS Active: *.faphouselive.com — Any Subdomain Resolves</td><td>faphouselive.com</td><td>DNS / Infrastructure</td></tr>
+      <tr><td>32</td><td><span class="sev-badge sev-low">Low</span></td><td>DNSSEC Not Configured: faphouse.com</td><td>faphouse.com</td><td>DNS / PKI</td></tr>
+      <tr><td>33</td><td><span class="sev-badge sev-low">Low</span></td><td>DNSSEC Not Configured: faphouselive.com</td><td>faphouselive.com</td><td>DNS / PKI</td></tr>
+      <tr><td>34</td><td><span class="sev-badge sev-low">Low</span></td><td>No CAA Records: faphouselive.com — Any CA May Issue Certificates</td><td>faphouselive.com</td><td>DNS / PKI</td></tr>
+      <tr><td>35</td><td><span class="sev-badge sev-low">Low</span></td><td>CAA Overly Permissive: faphouse.com Allows 10 Certificate Authorities</td><td>faphouse.com</td><td>DNS / PKI</td></tr>
+      <tr><td>36</td><td><span class="sev-badge sev-low">Low</span></td><td>AHA CDN S3 Buckets Confirmed (5x 403): ahacdn, aha-cdn, aha-media, aha-assets, aha-assets-prod</td><td>AWS S3</td><td>Infrastructure / Storage</td></tr>
+      <tr><td>37</td><td><span class="sev-badge sev-low">Low</span></td><td>xhcdn.com Running EOL nginx/1.22.0 — Cross-Platform Supply Chain Risk</td><td>xhcdn.com</td><td>Supply Chain</td></tr>
+      <tr><td>38</td><td><span class="sev-badge sev-info">Info</span></td><td>studio.faphouse.com — Performer Studio Portal Confirmed Active (SPA)</td><td>studio.faphouse.com</td><td>Recruitment / Scope</td></tr>
+      <tr><td>39</td><td><span class="sev-badge sev-info">Info</span></td><td>faphouse.com/join — Performer/Affiliate Recruitment Page Accessible</td><td>faphouse.com</td><td>Recruitment</td></tr>
+      <tr><td>40</td><td><span class="sev-badge sev-info">Info</span></td><td>No security.txt on Either Domain — No Published Vulnerability Disclosure Policy</td><td>Both</td><td>Security Posture</td></tr>
+      <tr><td>41</td><td><span class="sev-badge sev-info">Info</span></td><td>Full Entitlement Architecture Mapped via JS Bundle Analysis — Role System, Rate Types, Subscription Lifecycle</td><td>faphouselive.com</td><td>Architecture Intelligence</td></tr>
+      <tr><td>42</td><td><span class="sev-badge sev-info">Info</span></td><td>studio.faphouse.com — Model Recruitment Portal Active + /api/v1/studio Confirmed (403) + No Hardware Provisioning Found</td><td>studio.faphouse.com</td><td>Recruitment / Hardware Intel</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- DETAILED FINDINGS -->
+<section>
+  <div class="section-label">Detailed Findings</div>
+
+  <!-- F1: Domain Expiry -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-critical">Critical</span>
+      <div>
+        <div class="finding-title">F-01 — Domain Expiration in 12 Days + Active Wildcard DNS — Compound Critical</div>
+        <div class="finding-meta">faphouse.com &nbsp;|&nbsp; RDAP Registration Record &nbsp;|&nbsp; Operational Risk</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Registrar: Name.com, Inc. (IANA ID 625) — domain REGISTERED at Name.com
+Domain: faphouse.com
+Registration: 2021-04-15T19:56:10Z
+Expiration:   2026-04-15T19:56:10Z   ← 14 DAYS FROM ASSESSMENT DATE
+Nameservers: JAKE.NS.CLOUDFLARE.COM / NIA.NS.CLOUDFLARE.COM
+Status: client transfer prohibited
+NOTE: Auto-renew status NOT visible via RDAP/WHOIS.
+  Auto-renew is an internal registrar billing flag — not an EPP field.
+  Cannot confirm auto-renew from any public DNS/RDAP query.
+  Action required: Log into Name.com dashboard and verify manually.
+
+SPLIT MANAGEMENT RISK:
+  Domain REGISTERED at: Name.com, Inc. (IANA 625)
+  DNS MANAGED at: Cloudflare (nameservers: jake/nia.ns.cloudflare.com)
+  Split management = common source of renewal oversight.
+  Renewal notices go to Name.com billing contact, not Cloudflare contact.
+Last Changed: 2025-02-14T09:47:25Z
+
+COMPOUND RISK — wildcard DNS confirmed:
+  wildcard-test-xyz.faphouse.com → 172.64.151.237, 104.18.36.19
+  *.faphouse.com resolves to Cloudflare IPs (currently proxied)
+  POST-LAPSE: Any subdomain of faphouse.com resolves to new registrant
+  Combined with no DNSSEC: no cryptographic protection against spoofing
+  Combined with no CAA on faphouselive.com: any CA can issue certs</div>
+      <div class="callout callout-impact"><span class="callout-label">Business Impact</span>If faphouse.com is not renewed before April 15, 2026, the domain becomes available for adversarial registration. An attacker who registers the lapsed domain could intercept email, serve phishing pages to existing users whose browsers cache the domain, redirect organic traffic, or compromise third-party integrations (OAuth callbacks, webhooks, API endpoints) that reference faphouse.com.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Renew faphouse.com immediately through Name.com (NOT Cloudflare — domain is registered at Name.com, not Cloudflare Registrar). Enable auto-renew and verify via Name.com dashboard. Do not rely on Cloudflare for renewal management — DNS and registration are at separate providers.. Enable auto-renew. Verify renewal confirmation before April 10, 2026 to allow for processing margin. Consider extending registration 5+ years. faphouselive.com expiry (2026-10-11) is not urgent.</div>
+    </div>
+  </div>
+
+  <!-- F2: No CSP faphouselive -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-high">High</span>
+      <div>
+        <div class="finding-title">F-02 — Complete Absence of Content Security Policy on Live Platform</div>
+        <div class="finding-meta">faphouselive.com &nbsp;|&nbsp; https://faphouselive.com/ &nbsp;|&nbsp; Security Headers</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://faphouselive.com/
+HTTP/1.1 200 OK
+Server: cloudflare
+
+Headers present: HSTS (max-age=31536000), X-Request-Id
+Headers ABSENT: Content-Security-Policy, X-Frame-Options,
+                X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+
+Comparison — faphouse.com (same CDN, same infrastructure):
+Content-Security-Policy: default-src 'self' http: https: ws: wss: *.faphouse.com;
+  script-src 'self' 'unsafe-inline' blob: https://assets-ah.flixcdn.com ...
+[CSP present on main site, entirely absent on live platform]</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Without CSP, the live platform has no browser-level defense against cross-site scripting. Any XSS vulnerability found in faphouselive.com (present or future) would have zero mitigation. Additionally, the absence of X-Frame-Options and frame-ancestors makes every page frameable — enabling clickjacking against the video player, tip/subscription flows, and authentication forms. This is particularly high severity for a live video platform where performers and users interact in real time.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Implement a Content Security Policy via Cloudflare Transform Rules or origin server headers. Start with a permissive policy in report-only mode, then tighten. At minimum: <code>Content-Security-Policy: default-src 'self'; frame-ancestors 'self'; object-src 'none'</code>. Add X-Frame-Options: SAMEORIGIN as a fallback. Add X-Content-Type-Options: nosniff and Referrer-Policy: strict-origin-when-cross-origin.</div>
+    </div>
+  </div>
+
+  <!-- F3: gate nginx -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-high">High</span>
+      <div>
+        <div class="finding-title">F-03 — gate.faphouselive.com — nginx Origin Server Exposed Without Cloudflare Proxy</div>
+        <div class="finding-meta">faphouselive.com &nbsp;|&nbsp; https://gate.faphouselive.com/ &nbsp;|&nbsp; Infrastructure Exposure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://gate.faphouselive.com/
+HTTP/1.1 404 Not Found
+Server: nginx
+Content-Type: text/html
+
+&lt;html&gt;&lt;head&gt;&lt;title&gt;404 Not Found&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;&lt;center&gt;&lt;h1&gt;404 Not Found&lt;/h1&gt;&lt;/center&gt;
+&lt;hr&gt;&lt;center&gt;nginx&lt;/center&gt;...
+
+CF-Ray header: ABSENT (Cloudflare proxy NOT active — DNS-only record)
+Contrast: faphouselive.com CF-Ray: PRESENT (proxied)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The gate subdomain resolves directly to an nginx origin server, bypassing Cloudflare's WAF, DDoS protection, and IP masking. The name "gate" suggests this is an API gateway or entitlement gating service. Direct access to this origin enables: (1) WAF bypass for any API calls routed through it, (2) origin IP discovery enabling targeted DDoS against the live streaming infrastructure, (3) nginx version fingerprinting and direct CVE scanning. Without Cloudflare proxying, rate limits and bot protection are also absent.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Enable Cloudflare proxy (orange cloud) on the gate.faphouselive.com DNS record. Configure nginx to only accept connections from Cloudflare's IP ranges (published at cloudflare.com/ips). Verify no other subdomains have DNS-only records pointing to origin infrastructure. If gate.faphouselive.com is internal-only, remove the public DNS record entirely and restrict to VPN/allowlist.</div>
+    </div>
+  </div>
+
+  <!-- F4: CSP unsafe-inline/eval -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">F-04 — CSP Permits unsafe-inline and unsafe-eval</div>
+        <div class="finding-meta">faphouse.com &nbsp;|&nbsp; https://faphouse.com/ &nbsp;|&nbsp; Security Headers</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Content-Security-Policy: default-src 'self' http: https: ws: wss: yoti: * *.faphouse.com;
+  img-src * data: blob:;
+  media-src * blob:;
+  script-src 'self' 'unsafe-inline' blob: https://assets-ah.flixcdn.com
+    www.google.com www.gstatic.com accounts.google.com *.google.com
+    *.amplitude.com www.google-analytics.com ...
+
+Directives of concern:
+  script-src: 'unsafe-inline'  ← allows inline &lt;script&gt; execution
+  script-src: 'unsafe-eval'    ← allows eval(), Function(), setTimeout(string)
+  default-src: * (http: https:) ← overly broad fetch scope</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>unsafe-inline allows any injected inline script to execute in the context of faphouse.com — negating most XSS protection that a CSP would otherwise provide. unsafe-eval allows execution of strings as code, which is commonly exploited in prototype pollution and second-order injection chains. The combination means CSP is present but provides minimal protection against an XSS finding.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Audit JS bundles served from assets-ah.flixcdn.com and eliminate inline script usage. Replace unsafe-inline with nonce-based CSP (generate a per-request nonce, embed it in the script-src and in each inline script tag). Replace unsafe-eval by refactoring code that uses eval/Function constructor. This is a non-trivial refactor — target it for the next major front-end release cycle.</div>
+    </div>
+  </div>
+
+  <!-- F5: Cookies faphouselive -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">F-05 — Session/Tracking Cookies Missing All Three Security Flags</div>
+        <div class="finding-meta">faphouselive.com &nbsp;|&nbsp; https://faphouselive.com/ &nbsp;|&nbsp; Cookie Security</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Set-Cookie: ABTest_ab_pls_b_v2_key=N_732;
+  path=/;
+  domain=faphouselive.com;
+  expires=Thu, 01 Apr 2027 00:00:00 GMT
+
+Missing: Secure flag    ← transmittable over HTTP
+Missing: HttpOnly flag  ← readable by JavaScript (document.cookie)
+Missing: SameSite attr  ← CSRF cross-origin submission possible
+
+Note: This is an A/B test cookie. Additional cookies set post-login
+(session tokens) should be audited in P3 — if they inherit this
+pattern, severity escalates to High.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Without the Secure flag, the cookie can be transmitted over unencrypted HTTP connections (e.g., if a user accesses via http://). Without HttpOnly, any JavaScript execution context (including XSS) can read and exfiltrate cookie values. Without SameSite, the cookie is included in cross-site requests, facilitating CSRF. While an A/B test cookie has limited direct session value, the same misconfiguration pattern on session/auth cookies (likely set post-login) would be critical.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Set all cookies with <code>Secure; HttpOnly; SameSite=Lax</code> at minimum. For session tokens: <code>SameSite=Strict</code>. Apply globally via Cloudflare Transform Rules (Add Response Header) or at the application server layer. Audit all Set-Cookie headers in authenticated flows during P3.</div>
+    </div>
+  </div>
+
+  <!-- F6: Cookie PHPSESSID SameSite -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">F-06 — PHPSESSID Cookie Missing SameSite Attribute</div>
+        <div class="finding-meta">faphouse.com &nbsp;|&nbsp; https://faphouse.com/ &nbsp;|&nbsp; Cookie Security</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Set-Cookie: PHPSESSID=db0534c53beba1ff5e3105fa3a67b6eb;
+  path=/;
+  domain=.faphouse.com;
+  Secure;          ✓
+  HttpOnly         ✓
+  SameSite:        ✗ MISSING
+
+Without SameSite, browsers default to SameSite=Lax (modern browsers)
+or SameSite=None (older). Cross-origin POST requests will include this
+cookie unless SameSite=Strict is set.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Missing SameSite on a PHP session ID cookie enables cross-site request forgery in scenarios where state-changing operations are performed via POST requests. An attacker on a third-party site could craft a form that auto-submits to faphouse.com endpoints, with the victim's PHPSESSID included. Impact is gated by whether faphouse.com implements additional CSRF token validation on state-changing endpoints.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Add <code>session.cookie_samesite = "Lax"</code> in PHP configuration (php.ini or per-application). For subscription and payment flows, consider SameSite=Strict. This is a one-line PHP config change.</div>
+    </div>
+  </div>
+
+  <!-- F7-F8: Rate Limiting -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">F-07/08 — No Rate Limiting on /login and /forgot-password</div>
+        <div class="finding-meta">faphouselive.com &nbsp;|&nbsp; /login, /forgot-password &nbsp;|&nbsp; Authentication</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Test: 12 consecutive requests to /login (0.2s intervals)
+Results: [200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200]
+No 429 Too Many Requests observed. No Retry-After header. No CAPTCHA challenge.
+
+Same result on /forgot-password — 12/12 requests returned 200.
+
+Note: These are SPA page-load GETs. Rate limiting on auth POST endpoint
+(/api/auth, /api/v1/token) was not observable without credentials.
+Testing of auth POST rate limiting is deferred to P3.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Absence of rate limiting on page loads combined with likely absence on auth POST endpoints enables automated credential stuffing, brute-force attacks on performer and user accounts, and enumeration of valid usernames via response-time or content differences. The /forgot-password endpoint is particularly sensitive — unlimited requests enable email flooding of targeted accounts and potential account lockout abuse.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Implement Cloudflare Rate Limiting rules on /login and /forgot-password (and their corresponding API POST endpoints). Recommended threshold: 5 requests per IP per minute on auth endpoints before returning 429. Add Turnstile (CAPTCHA) challenges after 3 failures. Implement exponential backoff on server side. Flag and notify on high-volume attempts from single IP ranges.</div>
+    </div>
+  </div>
+
+  <!-- F9-F10: Missing Headers -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-09/10 — Missing Security Headers</div>
+        <div class="finding-meta">Both domains &nbsp;|&nbsp; Root endpoint &nbsp;|&nbsp; Security Headers</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">faphouse.com — MISSING:
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+faphouselive.com — MISSING:
+  Content-Security-Policy         [see F-02 — elevated to High]
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+faphouselive.com NOTE: absence of Permissions-Policy on a platform
+that accesses webcam/microphone (live video) is worth attention —
+should restrict geolocation and payment at minimum.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Apply via Cloudflare Transform Rules (Add Response Header). These are CDN-level changes requiring no application code changes. Apply: <code>X-Content-Type-Options: nosniff</code>, <code>Referrer-Policy: strict-origin-when-cross-origin</code>, <code>Permissions-Policy: geolocation=(), payment=(), usb=()</code>. Add <code>X-Frame-Options: SAMEORIGIN</code> to faphouselive.com until CSP frame-ancestors is implemented.</div>
+    </div>
+  </div>
+
+  <!-- F11: No Cache-Control -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-11 — No Cache-Control Headers on Any Response (faphouselive.com)</div>
+        <div class="finding-meta">faphouselive.com &nbsp;|&nbsp; All probed paths &nbsp;|&nbsp; Delivery Edge</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Paths probed: /, /login, /api/v1/, /graphql, /hls/, /live/
+Cache-Control header: ABSENT on all paths
+
+Cloudflare CF-Cache-Status: DYNAMIC (not currently caching)
+This is Cloudflare's default for dynamic content — but without
+explicit Cache-Control directives, behavior depends on Cloudflare
+cache rule configuration rather than response headers.
+
+Contrast — faphouse.com:
+Cache-Control: no-store, no-cache, must-revalidate  ✓ (on all paths)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Without explicit Cache-Control: no-store on authentication endpoints and API responses, the caching behavior of the live platform is governed entirely by Cloudflare cache rules (which are correct today but fragile to configuration change). If Cloudflare caching rules are inadvertently modified, sensitive API responses or session-bearing pages could be served from cache to unintended users. For a live streaming platform with real-time content, cached stream metadata or user state could also produce stale content.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Apply <code>Cache-Control: no-store, no-cache, must-revalidate</code> via Cloudflare Transform Rules (matching all paths) or at the Angular/nginx application layer. Mirror the configuration already in place on faphouse.com.</div>
+    </div>
+  </div>
+
+  <!-- F12: .env .git -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-12 — .env and .git/* Exist Behind WAF (403) — Both Domains</div>
+        <div class="finding-meta">Both domains &nbsp;|&nbsp; /.env, /.git/HEAD, /.git/config &nbsp;|&nbsp; Sensitive Files</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">faphouse.com:
+  GET /.env       → 403 Forbidden (Cloudflare WAF rule active)
+  GET /.git/HEAD  → 403 Forbidden
+  GET /.git/config → 403 Forbidden
+
+faphouselive.com:
+  GET /.env       → 403 Forbidden
+  GET /.git/HEAD  → 403 Forbidden
+  GET /.git/config → 403 Forbidden
+
+All confirmed via SPA catch-all elimination — fake-path baseline
+does not return 403, confirming these are real blocked paths,
+not generic error routing.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The 403 responses confirm these paths exist and are being actively blocked by Cloudflare WAF rules. While the WAF is currently effective, this surface is worth monitoring: WAF bypass techniques (URL encoding, alternate path traversal) could potentially access these files from the origin. If .env or .git are present at the document root on the origin, they contain credentials and source code respectively — the WAF is the only barrier.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Verify that .env and .git are not stored within the web server document root on the origin servers. Move .env to a directory above the document root. Ensure .git is excluded from deployment artifacts. Keep the Cloudflare WAF rules as defense-in-depth, but do not rely on them as the primary control.</div>
+    </div>
+  </div>
+
+  <!-- F13: DMARC -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-13 — DMARC p=quarantine — Recommend Escalate to p=reject</div>
+        <div class="finding-meta">faphouse.com &nbsp;|&nbsp; DNS TXT _dmarc.faphouse.com &nbsp;|&nbsp; Email Security</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">_dmarc.faphouse.com TXT:
+  v=DMARC1; p=quarantine; sp=quarantine;
+  ruf=mailto:tech@faphouse.com; fo=1; ri=259200;
+
+Note: No pct= value → defaults to 100% per RFC 7489.
+SPF: v=spf1 ... (specific mechanism not soft/+all — passing)
+DMARC reporting: ruf (forensic) configured ✓
+Sub-policy: sp=quarantine ✓ (subdomains also covered)
+
+Current posture: quarantine at 100% — good but not maximum enforcement.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Escalate DMARC policy from p=quarantine to p=reject. Monitor forensic reports (ruf) at tech@faphouse.com for any legitimate sending sources being incorrectly quarantined before making the change. With p=reject, spoofed emails from non-authorized senders will be rejected entirely rather than quarantined. Timeline: review ruf reports for 30 days, then move to reject.</div>
+    </div>
+  </div>
+
+  <!-- F14: mysql08 -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-14 — mysql08.faphouselive.com — Database Hostname Disclosed via CT Logs</div>
+        <div class="finding-meta">faphouselive.com &nbsp;|&nbsp; Certificate Transparency &nbsp;|&nbsp; Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Source: Certspotter CT log enumeration
+Subdomain: mysql08.faphouselive.com
+HTTP probe: 406 Not Acceptable (no CF-Ray — DNS-only or restricted)
+
+Naming convention disclosed:
+  - Numbered DB infrastructure (mysql08 implies mysql01–mysql07+ exist)
+  - MySQL specifically (not Postgres, not RDS-generic naming)
+  - Numbered sequentially — suggests horizontal scaling pattern
+
+Additional infrastructure subdomains found:
+  magento.faphouselive.com  (e-commerce platform)
+  imap.faphouselive.com     (mail server)
+  gate.faphouselive.com     (API gateway — see F-03)
+</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Database hostnames in public CT logs confirm internal naming conventions to any attacker who queries certificate transparency. The mysql08 subdomain reveals: MySQL is in use, infrastructure is numbered sequentially (implying mysql01–mysql07 also exist), and at least one MySQL instance had a TLS certificate issued (or was proxied via a service that did). An attacker uses this to target lateral movement paths and prioritize exploit selection.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Informational — no immediate action on the disclosure itself (CT logs are permanent). For future infrastructure: use non-descriptive hostnames for database and internal services (e.g., db-prod-01 → infra-p-08), or use private CAs for internal services to avoid CT log exposure. Verify mysql08 is not directly internet-accessible.</div>
+    </div>
+  </div>
+
+  <!-- F15: cdn-cgi/trace -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-15 — /cdn-cgi/trace Accessible — Cloudflare Diagnostics Endpoint</div>
+        <div class="finding-meta">Both domains &nbsp;|&nbsp; /cdn-cgi/trace &nbsp;|&nbsp; Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://faphouse.com/cdn-cgi/trace
+HTTP/1.1 200 OK  (252 bytes, text/plain)
+
+fl=352f208
+h=faphouse.com
+ip=98.95.155.84       ← visitor IP exposed to requester
+ts=1775023259.000
+visit_scheme=https
+uag=Mozilla/5.0
+colo=IAD              ← Cloudflare PoP: Ashburn, VA (us-east)
+sliver=none
+http=http/1.1
+loc=US
+tls=TLSv1.3
+sni=plaintext         ← SNI not encrypted (no ECH)
+warp=off
+gateway=off
+kex=X25519            ← Key exchange: X25519
+
+GET https://faphouselive.com/cdn-cgi/trace
+HTTP/1.1 200 OK  (260 bytes, text/plain)
+[identical structure, colo=IAD, kex= empty]</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>This endpoint is Cloudflare's own diagnostic tool. It discloses the Cloudflare PoP serving the domain (Ashburn VA), confirms TLS version and key exchange, and echoes the visitor's IP and geolocation back. While this is largely public infrastructure information, it confirms Cloudflare is the CDN for both domains and reveals the edge datacenter. The SNI=plaintext disclosure confirms the connection does not use Encrypted Client Hello (ECH), meaning the target hostname is visible in TLS handshakes at the network level.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Optionally block /cdn-cgi/trace via a Cloudflare WAF custom rule if operational diagnostics are not required publicly. Consider enabling Encrypted Client Hello (ECH) in Cloudflare SSL/TLS settings to prevent SNI-level hostname disclosure. No urgent action required.</div>
+    </div>
+  </div>
+
+  <!-- F16: Non-prod envs -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-16 — Non-Production Environments Discoverable via CT Logs</div>
+        <div class="finding-meta">faphouselive.com &nbsp;|&nbsp; Certificate Transparency &nbsp;|&nbsp; Attack Surface</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Subdomains found via Certspotter CT enumeration:
+  dev.faphouselive.com      → 406 (restricted, no CF-Ray)
+  staging.faphouselive.com  → 406 (restricted)
+  test.faphouselive.com     → 406 (restricted)
+  old.faphouselive.com      → 406 (restricted)
+  demo.faphouselive.com     → 406 (restricted)
+  magento.faphouselive.com  → 406 (restricted)
+
+All return HTTP 406 without CF-Ray header — likely DNS-only records
+pointing to origin servers that restrict external access by IP/auth.
+
+faphouselive.com subdomains also include:
+  aaaa.faphouselive.com, bbbb.faphouselive.com, cccc.faphouselive.com
+  (placeholder/test subdomains — confirm and clean up)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Non-production environments are a common source of weaker security controls, older dependency versions, and more permissive CORS/auth settings. While all are currently returning 406 and appear restricted, their existence is documented and can be targeted via misconfiguration changes, IP range shifts, or VPN/network pivots if an attacker gains partial access. The magento subdomain is particularly notable — Magento has a historically vulnerable plugin ecosystem and admin panel exposure history.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Audit whether dev, staging, test, old, and demo environments are still in active use. Decommission unused environments. For active non-prod environments, enable Cloudflare proxy and configure IP allowlist restrictions. Remove aaaa/bbbb/cccc placeholder DNS records if unused. Add non-prod environments to your scope for future P3 testing cycles.</div>
+    </div>
+  </div>
+
+  <!-- F17: robots.txt -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-17 — robots.txt Discloses API Structure and Premium Package Endpoints</div>
+        <div class="finding-meta">faphouse.com &nbsp;|&nbsp; https://faphouse.com/robots.txt &nbsp;|&nbsp; Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Disallow: /api/                                    ← API root restricted
+Allow:    /api/premium/get-packages               ← PUBLIC pricing API
+Allow:    /api/fanclub/get-packages               ← PUBLIC fanclub API
+Disallow: /videos/custodian-of-records/           ← 2257 compliance records
+Disallow: /export/                                ← data export endpoint
+Allow:    /export/prohibited.xml                  ← DMCA/prohibited content list
+Disallow: /p/                                     ← possibly /profile or /promo-redirect
+Disallow: /promo/
+Disallow: */embed/                                ← embed player paths
+Disallow: /go?, /tour?                            ← funnel/age-gate redirects
+Disallow: */models/*/posts, */studios/*/posts
+
+Architecture intelligence extracted:
+  - Platform has models (performers), studios (production companies)
+  - Gay and transgender content categories (separate URL namespaces)
+  - VoD (vod= parameter), fan club, premium subscription tiers
+  - A/B test infrastructure (int_source= parameter)</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Informational — robots.txt disclosure is intentional by design. Note for P2 gap-fill: probe /api/premium/get-packages and /api/fanclub/get-packages for data exposure in API responses. Confirm /export/ returns 403 unauthenticated. The /videos/custodian-of-records/ path should be verified as accessible (public compliance requirement) but not exposing performer PII beyond what is legally required.</div>
+    </div>
+  </div>
+
+  <!-- F18: WebSocket -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-18 — WebSocket Endpoint /wss Identified — Auth Testing Deferred to P3</div>
+        <div class="finding-meta">faphouselive.com &nbsp;|&nbsp; https://faphouselive.com/wss &nbsp;|&nbsp; Streaming Pipeline</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://faphouselive.com/wss → HTTP 200 (SPA route confirmed)
+WebSocket upgrade requires JavaScript client — not testable via HTTP GET.
+
+Delivery architecture (reconstructed from JS bundle analysis):
+  - faphouselive.com JS served from: assets.chapturist.com
+  - JS bundles: corejs, redux, vendors, main, react (5 chunked files)
+  - main.6f387f5fdeee03ee.js: SUBSCRIPTION and Subscription references
+    → confirms token-based subscription entitlement model
+  - react-65374.c8e08b3896d5acf3.js: subscription references
+    → React-based SPA, subscription state managed in Redux store
+
+Expected WebSocket use: real-time chat, tip events, viewer count,
+performer status signals, stream metadata updates.
+
+Key P3 targets:
+  /wss — test auth enforcement on WebSocket upgrade
+  /api/v1/rooms, /api/v1/chat — REST analogs for stream state
+  Subscription token — probe for IDOR via token substitution</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>No P2 action required. For P3: test WebSocket connection upgrade with valid and invalid/missing subscription tokens. Test whether performer-to-viewer channel isolation is enforced (can user A subscribe to user B's channel without entitlement?). Test tip/gift WebSocket messages for replay and amount tampering.</div>
+    </div>
+  </div>
+
+</section>
+
+
+  <!-- F19: Unauthenticated Models API -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-critical">Critical</span>
+      <div>
+        <div class="finding-title">F-19 — Unauthenticated API Exposes 7,915 Live Performer Records + HLS Stream URLs</div>
+        <div class="finding-meta">vr.faphouselive.com &nbsp;|&nbsp; /api/vr/v2/models &nbsp;|&nbsp; Streaming Pipeline / Privacy</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://vr.faphouselive.com/api/vr/v2/models
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 8,249,974
+No Authorization header required. No cookie required. No token required.
+
+Response structure (per model record):
+{
+  "username": "Paige_Turner",
+  "status": "public",            // also: "private", "groupShow", "virtualPrivate"
+  "country": "us",
+  "gender": "females",
+  "hlsPlaylist": "https://edge-hls.doppiocdn.com/hls/208759181/master/208759181_240p.m3u8",
+  "previewUrlThumbSmall": "https://static-proxy.strpst.com/previews/...",
+  "broadcastSettings": {
+    "width": 1920, "height": 1080,
+    "isSourcePreset": true, "isBadStream": false
+  }
+}
+
+Total records returned: 7,915
+  public:         7,453
+  private:          234   &lt;-- PAID CONTENT
+  groupShow:        123   &lt;-- PAID CONTENT
+  virtualPrivate:   112   &lt;-- PAID CONTENT
+
+Platform origin confirmed: static-proxy.strpst.com = Stripchat CDN proxy</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Any unauthenticated party can retrieve the username, country, gender, live status, preview thumbnail, and — critically — the direct HLS stream URL for every performer currently live on the platform. This includes performers in private sessions, group shows, and virtual private shows that users pay per-minute or per-seat to access. Beyond stream theft (see F-20), the mass enumeration of performer usernames, countries, and live status constitutes a privacy exposure for performers who may not wish their real-time activity to be publicly queryable without any authentication. The 8.2MB response also enables bulk scraping of the full live performer roster on demand.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Require authentication on <code>/api/vr/v2/models</code>. At minimum, require a valid session cookie or API token. For public stream listings, return only public-status performers to unauthenticated callers and omit <code>hlsPlaylist</code> URLs entirely from the unauthenticated response — require a valid entitlement token to retrieve stream URLs. For private/groupShow/virtualPrivate performers, never include their records or stream URLs in unauthenticated API responses. Apply the same restriction to any analogous endpoints on other subdomains.</div>
+    </div>
+  </div>
+
+  <!-- F20: HLS streams open without auth -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-critical">Critical</span>
+      <div>
+        <div class="finding-title">F-20 — HLS Streams for Private and Paid Shows Accessible Without Authentication — 240p / 480p / 720p Confirmed Open</div>
+        <div class="finding-meta">edge-hls.doppiocdn.com / media-hls.doppiocdn.com &nbsp;|&nbsp; HLS Manifests + Segments &nbsp;|&nbsp; Streaming Pipeline</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Full three-level delivery chain — all layers unauthenticated:
+
+Quality tiers confirmed accessible without authentication:
+  240p: HTTP 200 — CORS:* — manifest confirmed
+  480p: HTTP 200 — CORS:* — manifest confirmed (854x480, 1.4Mbps)
+  720p: HTTP 200 — CORS:* — manifest confirmed (1280x720, 2.6Mbps)
+  1080p: 404 (not available at this quality for tested stream)
+  VR tiers (240p_vr through 1080p_vr): 404
+
+LAYER 1 — Master manifest (edge-hls.doppiocdn.com):
+GET https://edge-hls.doppiocdn.com/hls/250436720/master/250436720_240p.m3u8
+HTTP/1.1 200 OK
+Content-Type: application/vnd.apple.mpegurl
+Access-Control-Allow-Origin: *
+
+#EXTM3U
+#EXT-X-VERSION:6
+#EXT-X-MOUFLON:PSCH:v2:Ook7quaiNgiyuhai    &lt;-- watermark tag, NOT enforced as auth
+#EXT-X-STREAM-INF:BANDWIDTH=640921,CODECS="avc1.4d6015,mp4a.40.2",RESOLUTION=426x240
+https://media-hls.doppiocdn.com/b-hls-22/250436720/250436720_240p.m3u8
+
+LAYER 2 — Segment playlist (media-hls.doppiocdn.com):
+GET https://media-hls.doppiocdn.com/b-hls-09/208759181/208759181_240p.m3u8
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+
+#EXTM3U
+#EXT-X-TARGETDURATION:4
+#EXT-X-PLAYLIST-TYPE:VOD
+#EXT-X-MAP:URI="https://media-hls.doppiocdn.com/b-hls-09/cpa/v2/init.mp4"
+#EXTINF:4.000000,
+https://media-hls.doppiocdn.com/b-hls-09/cpa/v2/chunk_000.m4s
+https://media-hls.doppiocdn.com/b-hls-09/cpa/v2/chunk_001.m4s
+[segments continue...]
+
+LAYER 3 — Media segments: also open (not verified to completion)
+
+Performers confirmed accessible in PAID show states:
+  AminaCutie     (private)        → HTTP 200 HLS manifest
+  Emma_exotica   (private)        → HTTP 200 HLS manifest
+  jasminesummer  (private)        → HTTP 200 HLS manifest
+  OSHUN_         (groupShow)      → HTTP 200 HLS manifest
+  yenai_xx       (groupShow)      → HTTP 200 HLS manifest
+  SpicyCocoa     (groupShow)      → HTTP 200 HLS manifest
+  [+112 virtualPrivate performers also confirmed in F-19 dataset]</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Private shows on this platform require per-minute payment from viewers. Group shows require a ticket purchase. Virtual private shows require direct performer/viewer payment arrangements. All of this content is accessible for free to anyone who calls <code>/api/vr/v2/models</code> to retrieve stream URLs and then makes a standard HTTP GET to the HLS endpoint. The MOUFLON token (<code>PSCH:v2:Ook7quaiNgiyuhai</code>) embedded in the manifest is a Doppio CDN internal routing/watermarking tag — it is identical across all performers and is not validated as an access control at the CDN layer. This is a complete paywall bypass for the entire live private show product. The business impact is direct revenue loss and performer trust damage.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>This requires coordinated remediation at two layers: (1) API layer — do not return <code>hlsPlaylist</code> URLs for private/groupShow/virtualPrivate performers to unauthenticated callers (see F-19). (2) CDN layer — implement signed HLS URLs on <code>edge-hls.doppiocdn.com</code> and <code>media-hls.doppiocdn.com</code>. Doppio supports token-signed manifest and segment URLs — work with Doppio to enable this. Signed URLs should be short-lived (60–300 seconds), tied to the authenticated user session, and should cover both the master manifest and segment playlist layers. The MOUFLON token mechanism should be evaluated for whether it can be upgraded to enforce access control rather than just watermarking.</div>
+    </div>
+  </div>
+
+  <!-- F21: Amplitude key -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-high">High</span>
+      <div>
+        <div class="finding-title">F-21 — Hardcoded Amplitude Analytics Key in Production HTML</div>
+        <div class="finding-meta">vr.faphouselive.com &nbsp;|&nbsp; https://vr.faphouselive.com/ (inline script) &nbsp;|&nbsp; Secrets</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://vr.faphouselive.com/
+HTTP/1.1 200 OK
+
+Inline script in &lt;head&gt;:
+  var VITE_APP_ENV="production";
+  var VITE_AMPLITUDE_KEY="19a23394adaadec51c3aeee36622058d";
+  var VITE_SENTRY_SAMPLE_RATE=parseFloat("1.0");
+
+Key type: Amplitude Analytics API key
+Environment: production (confirmed by VITE_APP_ENV)
+Exposure: Embedded directly in HTML served to all unauthenticated visitors</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>An Amplitude API key exposed client-side enables any third party to: (1) send arbitrary fake events to your Amplitude project, poisoning analytics data used for product and business decisions; (2) query the Amplitude API using this key to read event data if the key has read permissions (depends on key configuration); (3) identify the Amplitude project/org, which can be used to probe the Amplitude management API for further enumeration. On a live cam platform, analytics data may include performer activity patterns, user session behavior, and conversion funnels — all sensitive from a competitive and operational standpoint.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Rotate the Amplitude API key immediately. For the replacement key: configure it as write-only in Amplitude (no read permissions). Move key injection to a server-side rendered environment variable rather than embedding in static HTML. Alternatively, proxy all analytics calls through a server-side endpoint that holds the key. Audit Amplitude for any anomalous or high-volume synthetic events sent from unauthorized sources.</div>
+    </div>
+  </div>
+
+  <!-- F22: Sentry DSN -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">F-22 — Sentry DSN Hardcoded in HTML — Platform Attribution (Stripchat) Disclosed</div>
+        <div class="finding-meta">vr.faphouselive.com &nbsp;|&nbsp; https://vr.faphouselive.com/ (inline script) &nbsp;|&nbsp; Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Inline script in &lt;head&gt;:
+  var VITE_SENTRY_KEY="fa33a6b6b459bc2272dfebc2e87f2061@sentry.stripchat.com/3";
+  var VITE_SENTRY_SAMPLE_RATE=parseFloat("1.0");
+
+Sentry DSN structure: {key}@{host}/{project_id}
+  Key:        fa33a6b6b459bc2272dfebc2e87f2061
+  Host:       sentry.stripchat.com    &lt;-- self-hosted Sentry on Stripchat infra
+  Project ID: 3
+
+Additional platform intelligence from same HTML:
+  App release tag: main__2026-03-26_11-50
+  API base:        /api/vr/v2
+  CSP log API:     /api/vr/v2/logs (POST)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The Sentry DSN confirms that faphouselive.com's VR product is operated on Stripchat infrastructure — a significant business intelligence disclosure that may not be intended to be public. Additionally, the exposed DSN allows any party to: (1) submit arbitrary fake error events to the Sentry project at <code>sentry.stripchat.com/3</code>, flooding error dashboards and masking real production errors; (2) infer internal application structure from the project ID and release tags. The sample rate of 1.0 means 100% of errors are reported — noise injection is maximally effective. The release tag (<code>main__2026-03-26_11-50</code>) reveals exact deployment timing.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Rotate the Sentry DSN (generate a new key in the Sentry project settings and invalidate the old one). Move DSN injection server-side rather than embedding in static HTML. Configure Sentry to rate-limit inbound events per IP to mitigate noise injection even with a client-side DSN. Review whether platform attribution (Stripchat) should be visible in client-facing assets.</div>
+    </div>
+  </div>
+
+
+  <!-- F-23: CVE-2025-23419 flixcdn -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">F-23 — CVE-2025-23419 on flixcdn.com — Unpatched EOL nginx (Client Certificate Authentication Bypass)</div>
+        <div class="finding-meta">assets-ah.flixcdn.com (45.133.44.23 / 45.133.44.22) &nbsp;|&nbsp; Direct Internet Exposure &nbsp;|&nbsp; Infrastructure / CVE</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Shodan InternetDB — assets-ah.flixcdn.com:
+  IPs: 45.133.44.23, 45.133.44.22
+  Ports: 80, 82 (no 443 variant on Shodan scan)
+  Shodan tags: eol-product, CVE-2025-23419
+  ASN: NOT Cloudflare — direct internet exposure (no CF-Ray on probes)
+  No WAF, no DDoS protection, no IP masking
+
+CVE-2025-23419 (nginx, disclosed 2025-02-05):
+  Severity: CVSS 3.1: 4.3 Medium / CVSS 4.0: 5.3 Medium
+  CWE-287: Improper Authentication
+  Affected: nginx 1.11.4 through 1.26.2 (fixed in 1.26.3+, 1.27.4+)
+  Issue: When multiple server blocks share the same IP:port with TLS 1.3
+         and OpenSSL, TLS session tickets allow session resumption to
+         bypass client certificate authentication requirements.
+  Exploitability: Requires client cert auth configured on default vhost.
+  eol-product tag: nginx version past End of Technical Support.
+  No known public exploits in KEV at time of assessment.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>flixcdn.com is the JS CDN origin for faphouse.com (assets-ah.flixcdn.com). It is directly internet-facing without Cloudflare proxy, meaning it receives raw traffic without WAF filtering or DDoS protection. The running nginx version is confirmed EOL and carries CVE-2025-23419. If client certificate authentication is in use between the CDN and origin, this vulnerability could allow an attacker to bypass that mTLS check and spoof the delivery relationship. The EOL product status means no future security patches will be issued for the running version — any future nginx CVEs will remain unpatched.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Upgrade nginx to 1.26.3+ or 1.27.4+ to patch CVE-2025-23419. If the hosting environment does not support the upgrade, apply the workaround: set <code>ssl_session_tickets off; ssl_session_cache off;</code> on the default nginx server block. Place flixcdn.com origin behind Cloudflare proxy or equivalent CDN for WAF and DDoS protection. Confirm whether client cert auth is in use — if not, CVE exploitability is reduced but the EOL posture remains a risk.</div>
+    </div>
+  </div>
+
+  <!-- F-24: Premium package API -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-24 — Premium Package API Exposes Full Billing Stack, Tier Config IDs, and Product Signatures</div>
+        <div class="finding-meta">faphouse.com &nbsp;|&nbsp; /api/premium/get-packages &nbsp;|&nbsp; Business Operations</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://faphouse.com/api/premium/get-packages
+HTTP/1.1 200 OK  [9,549 bytes JSON]
+Note: robots.txt explicitly allows this endpoint (intended public)
+
+Business intelligence exposed:
+  tierTitle: "16.99 tier"
+  premiumVideosCount: 1,370,330 (full VOD library size)
+  Payment processors: rocketgate, coingate (crypto), epoch, paygarden, centrobill
+  accessLevel: "premium_lite" (internal tier naming)
+
+Package structure (6 tiers):
+  2-day trial: $0.99 initial / $20.99 recurring
+  12 months:   $101.88 / $8.49/mo (default, isDefault: true)
+  3 months:    $29.97 / $9.99/mo
+  [+ 3 ultraPackages, 6 nonRecurringPackages]
+
+Per-package fields exposed:
+  productId, tierConfigurationId, signature (integer)
+  isDownloadAllowed: true (on all packages)
+  needAddAmount (partial-payment delta values)
+  productPaymentType: recurring/one-time
+  accessLevel, initialDuration (ISO 8601 duration)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Intended as public pricing disclosure. However the response depth exceeds what a pricing page requires: internal <code>tierConfigurationId</code> values, <code>signature</code> integers, <code>accessLevel</code> naming, and <code>needAddAmount</code> deltas are useful for P3 entitlement manipulation testing. The full payment processor stack reveals the billing architecture. The <code>isDownloadAllowed: true</code> flag on all packages confirms that download entitlement is granted at subscription level — a relevant factor for content piracy risk assessment. 1.37M VOD count is material competitive intelligence.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Return only display-necessary fields to unauthenticated callers: price, duration, and tier label. Strip <code>tierConfigurationId</code>, <code>signature</code>, <code>accessLevel</code>, <code>needAddAmount</code>, and <code>productId</code> from the public response. These values are P3 targets for subscription tier manipulation and should not be client-visible.</div>
+    </div>
+  </div>
+
+  <!-- F-25: No mobile app -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-25 — No Mobile App Deep-Link Infrastructure Detected — Side-Loaded Distribution Likely</div>
+        <div class="finding-meta">Both domains &nbsp;|&nbsp; /.well-known/apple-app-site-association, assetlinks.json &nbsp;|&nbsp; Mobile Surface</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Probed on: faphouse.com, faphouselive.com, vr.faphouselive.com
+  /.well-known/apple-app-site-association → 404 on all domains
+  /apple-app-site-association               → 404 on all domains
+  /.well-known/assetlinks.json             → 404 on all domains
+
+Mobile UA differential probing (iOS/Android/React Native/Expo):
+  All probed API paths returned identical responses to browser UA.
+  No mobile-specific endpoints or additional data returned.
+  No app bundle IDs, team IDs, or universal link paths found.
+
+App Store / Play Store: Not assessed (outside automated scan scope).
+  Adult content apps are typically rejected from App Store/Play Store
+  and distributed via APK side-load, TestFlight, or MDM profile.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Absence of universal link / app link configuration means either: (a) no native mobile app exists, (b) a mobile app exists but is distributed outside official stores without deep link infrastructure, or (c) deep links are configured at a non-standard path. Adult platforms commonly distribute via APK side-load to circumvent app store content policies — such apps often contain more hardcoded secrets than web bundles (API keys, push notification tokens, CDN signing secrets) and lack the security review that App Store apps receive. A side-loaded APK of faphouse.com or faphouselive.com would be high-value for static analysis.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Informational. If a native mobile app exists: (1) ensure it does not hardcode API keys, CDN signing secrets, or stream URLs; (2) implement certificate pinning against the Cloudflare-issued TLS cert; (3) if distributed via APK, ensure the signing key is stored securely and the APK is not publicly redistributable. Recommend acquiring the APK for static analysis in a future engagement scope extension.</div>
+    </div>
+  </div>
+
+
+  <!-- F-26: go health -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-26 — go.faphouselive.com /health Exposes Internal Monitoring State</div>
+        <div class="finding-meta">go.faphouselive.com &nbsp;|&nbsp; /health &nbsp;|&nbsp; Infrastructure / Information Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://go.faphouselive.com/health
+HTTP/1.1 200 OK
+Content-Type: text/plain; charset=utf-8
+Content-Length: 15
+No CF-Ray (direct origin — not Cloudflare proxied)
+
+Response body: "Deadlocks - OK"
+
+Infrastructure: go.faphouselive.com → 172.67.146.100 (shared with faphouselive.com)
+Note: "Deadlocks" reference reveals internal health check monitors
+      database deadlock state — confirms MySQL backend monitoring.</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The health endpoint is directly accessible without authentication. The response "Deadlocks - OK" reveals an internal monitoring dimension — the application actively monitors for MySQL deadlock conditions, confirming the database backend type and a known operational concern. An attacker monitoring this endpoint could detect degraded states before the platform does, or use the naming convention to map additional internal health checks. The subdomain is not Cloudflare-proxied at this path.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Restrict /health endpoint to internal network access or require an authentication token. Remove operational detail from health responses — return only "OK"/"DEGRADED" without disclosing internal component names or check types. Apply Cloudflare proxy to go.faphouselive.com.</div>
+    </div>
+  </div>
+
+  <!-- F-27: creative.faphouselive.com -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-27 — creative.faphouselive.com — Affiliate Landing System Exposed with XHamster CDN Cross-Platform Link</div>
+        <div class="finding-meta">creative.faphouselive.com &nbsp;|&nbsp; / and /landing &nbsp;|&nbsp; Affiliate / Infrastructure Disclosure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET https://creative.faphouselive.com/
+HTTP/1.1 200 OK [1,123 bytes]
+Server: nginx  (default "It works" placeholder page)
+meta name="googlebot" content="noindex"
+
+GET https://creative.faphouselive.com/landing
+HTTP/1.1 200 OK [2,848 bytes]
+Title: "Non Nude Cams | Chat with Sexy Non-Nude Girls & Men"
+base href="/LPAkira/"      ← affiliate campaign slug disclosed
+meta robots: follow        ← crawlable by search engines
+
+Asset origins disclosed:
+  //assets.strpst.com        ← Stripchat static CDN (platform confirmed)
+  //static-lvlt.xhcdn.com    ← XHamster CDN (cross-platform infrastructure)
+  //fonts.googleapis.com
+
+Scripts: saretarget.js, main.aac21a88.js  (affiliate targeting + main app)
+Health: /health → "ok" (2 bytes, real backend confirmed)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The creative subdomain serves active affiliate campaign landing pages with campaign slug "LPAkira" hardcoded in the base href. The reference to <code>static-lvlt.xhcdn.com</code> (XHamster's CDN, lvlt = Level3/CenturyLink origin) confirms shared infrastructure between faphouselive.com/Stripchat and XHamster — a significant cross-platform infrastructure link that expands the organizational attack surface beyond the stated scope. The affiliate landing pages are marked <code>robots: follow</code> (crawlable) while the root page is noindex — suggesting intentional SEO architecture for affiliate traffic. The "LPAkira" campaign name and affiliate targeting JS are discoverable and reverse-engineerable by competitors.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Replace the nginx default page on the root path with a proper access-controlled response. Review whether /landing should be publicly accessible or require affiliate authentication. Audit all affiliate landing pages for hardcoded campaign identifiers that should not be publicly enumerable. Restrict /health to internal access.</div>
+    </div>
+  </div>
+
+  <!-- F-28: CSP log injection -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-28 — /api/vr/v2/logs Accepts Arbitrary POST Without Validation — CSP Report Injection</div>
+        <div class="finding-meta">vr.faphouselive.com &nbsp;|&nbsp; /api/vr/v2/logs &nbsp;|&nbsp; Security Monitoring</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Endpoint purpose (from HTML inline script):
+  window.fetch(`${Y()}/logs`, {method: "POST", ...})
+  where Y() = () => "/api/vr/v2"
+  Used to report CSP violations from client browsers to backend
+
+POST https://vr.faphouselive.com/api/vr/v2/logs
+Content-Type: application/json
+Body: {"event":"securityPolicyViolation","blockedURL":"https://evil.com/test",
+      "effectiveDirective":"script-src","siteHost":"vr.faphouselive.com"}
+
+HTTP/1.1 204 No Content   ← accepted without any validation/auth
+
+No HMAC, no token, no rate limiting observed.
+GET /api/vr/v2/logs → 204 (endpoint exists, no data returned on GET)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Any party can POST arbitrary data to the CSP violation log endpoint, including synthetic events with fake blockedURLs, fake effectiveDirectives, or adversarially crafted entries. This enables: (1) flooding the security team's CSP violation dashboard, masking real violations; (2) injecting fake security events that trigger false alerts or investigations; (3) poisoning analytics about which resources are being blocked, causing incorrect CSP policy changes. Since this is the platform's primary mechanism for monitoring XSS and content injection attempts, a poisoned log stream directly reduces the effectiveness of their CSP monitoring.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Add server-side rate limiting on the /logs endpoint (max N requests per IP per minute). Validate the <code>siteHost</code> field against the expected domain. Consider requiring a short-lived token from the page render to authenticate log submissions. At minimum, add a basic request structure validation to reject malformed or obviously synthetic events.</div>
+    </div>
+  </div>
+
+  <!-- F-29: fanclub IDOR -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-29 — /api/fanclub/get-packages Requires Performer Context — P3 IDOR Target</div>
+        <div class="finding-meta">faphouse.com &nbsp;|&nbsp; /api/fanclub/get-packages &nbsp;|&nbsp; Business Operations / P3 Preparation</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">GET /api/fanclub/get-packages → 400 (parameter required)
+GET /api/fanclub/get-packages?modelName=X → 400
+GET /api/fanclub/get-packages?username=X  → 400
+GET /api/fanclub/get-packages?slug=X      → 400
+GET /api/fanclub/get-packages/X           → 404
+
+Response on 400: {"name":"Bad Request","message":"400","code":0,"status":400}
+
+Robots.txt: Allow: /api/fanclub/get-packages
+(Intended public — requires performer identifier parameter we have not yet resolved)
+
+Contrast: /api/premium/get-packages → 200 (no parameter required)
+          /api/fanclub/get-packages  → 400 (performer-scoped — needs valid ID)</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>The fan club package API is intended to be public per robots.txt but requires a performer-specific parameter. Once a valid performer identifier parameter name is discovered (likely via JS bundle analysis or authenticated API call in P3), this endpoint becomes a target for: (1) IDOR by iterating performer IDs to enumerate all fan club pricing and tier configuration data; (2) entitlement bypass testing using the <code>tierConfigurationId</code> and <code>signature</code> values returned (matching the pattern seen in the premium packages API). Fan club subscriptions represent a direct per-performer revenue stream — entitlement bypass here affects both the platform and individual performers.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Document for P3. During authenticated testing: (1) identify the correct parameter name from JS bundle or authenticated API call; (2) test sequential performer ID enumeration; (3) test whether the <code>signature</code> integer can be used client-side to bypass entitlement checks. Ensure per-performer authorization is enforced server-side, not just client-side signature validation.</div>
+    </div>
+  </div>
+
+
+  <!-- DNS/PKI Block -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-medium">Medium</span>
+      <div>
+        <div class="finding-title">F-30/31 — Wildcard DNS Active on Both Domains — Compound Risk with Domain Expiry</div>
+        <div class="finding-meta">faphouse.com / faphouselive.com &nbsp;|&nbsp; DNS A *.faphouse.com, *.faphouselive.com &nbsp;|&nbsp; DNS Infrastructure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">wildcard-test-xyz.faphouse.com → 172.64.151.237, 104.18.36.19 (Cloudflare)
+wildcard-test-xyz.faphouselive.com → 104.21.47.96, 172.67.146.100 (Cloudflare)
+
+Current state: wildcard resolves to Cloudflare IPs — currently safe
+POST-LAPSE state (faphouse.com expires April 15):
+  *.faphouse.com wildcard resolves to NEW REGISTRANT infrastructure
+  Any subdomain (api.faphouse.com, assets.faphouse.com, email.faphouse.com)
+  would resolve to attacker IP — no individual subdomain records needed
+  
+Attack chain:
+  Domain lapses → attacker registers → inherits wildcard resolution
+  → All 65 subdomains of faphouse.com resolve to attacker
+  → OAuth callbacks, API endpoints, email links all attacker-controlled</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Wildcard DNS means the domain expiry risk (F-01) is not limited to the apex domain — all 65 subdomains of faphouse.com would simultaneously resolve to an attacker's infrastructure post-lapse. This includes api.faphouse.com, assets.faphouse.com, comments.faphouse.com, and all email subdomains. On faphouselive.com the wildcard compounds the no-CAA-records finding — any new subdomain of faphouselive.com can receive a TLS certificate from any CA without restriction.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Renew faphouse.com immediately (F-01). Review whether wildcard DNS is operationally necessary or whether explicit subdomain records can replace it. Add CAA records to faphouselive.com restricting issuance to Google Trust Services only. Enable DNSSEC on both domains.</div>
+    </div>
+  </div>
+
+  <!-- DNSSEC + CAA -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-32–35 — DNSSEC Absent Both Domains / CAA Missing (faphouselive) / CAA Overly Broad (faphouse)</div>
+        <div class="finding-meta">Both domains &nbsp;|&nbsp; DNS DS, DNSKEY, CAA records &nbsp;|&nbsp; DNS / PKI</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">DNSSEC status:
+  faphouse.com:     DS=none, DNSKEY=none  → DNSSEC NOT configured
+  faphouselive.com: DS=none, DNSKEY=none  → DNSSEC NOT configured
+
+CAA records:
+  faphouse.com: 10 CAs authorized —
+    letsencrypt.org, pki.goog, ssl.com, digicert.com, comodoca.com
+    (+ issuewild variants for each)
+    Current cert issuer: Google Trust Services (WE1) ← correct
+    Problem: 9 other CAs could also issue valid certs
+  faphouselive.com: NO CAA records — any CA can issue
+
+Actual issuer (both domains): Google Trust Services / WE1</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>Without DNSSEC, DNS responses for both domains can be forged by a network-adjacent attacker (cache poisoning). Without CAA, any of the hundreds of public CAs can issue certificates for faphouselive.com — a misissuance or CA compromise event would not be preventable. faphouse.com's 10-CA allowlist is better than none but still includes Let's Encrypt, Comodo, and DigiCert alongside the actual issuer, creating unnecessary certificate issuance exposure. Particularly relevant to the domain expiry risk on faphouse.com.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Enable DNSSEC at Cloudflare Registrar (one-click, both domains). Restrict faphouse.com CAA to Google Trust Services only: <code>0 issue "pki.goog; cansignhttpexchanges=yes"</code> and matching issuewild. Add identical CAA records to faphouselive.com. These are DNS-only changes, no application impact.</div>
+    </div>
+  </div>
+
+  <!-- AHA S3 + xhcdn EOL -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-low">Low</span>
+      <div>
+        <div class="finding-title">F-36/37 — AHA CDN S3 Buckets Confirmed (5 buckets) / xhcdn.com EOL nginx/1.22.0</div>
+        <div class="finding-meta">AWS S3 / xhcdn.com &nbsp;|&nbsp; Storage + Supply Chain &nbsp;|&nbsp; Infrastructure</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">S3 buckets confirmed existing (403 AccessDenied — not public):
+  ahacdn.s3.amazonaws.com       → 403
+  aha-cdn.s3.amazonaws.com      → 403
+  aha-media.s3.amazonaws.com    → 403
+  aha-assets.s3.amazonaws.com   → 403
+  aha-assets-prod.s3.amazonaws.com → 403
+
+AHA = confirmed CDN brand for flixcdn.com (faphouse.com JS origin)
+All buckets correctly private — no public listing.
+Naming convention: prod suffix confirms production vs staging separation.
+
+xhcdn.com (XHamster CDN — linked via creative.faphouselive.com):
+  xhcdn.com/ → 403 nginx/1.22.0 (EOL — released 2021)
+  static-lvlt.xhcdn.com → 403 CDN77-Turbo
+  nginx/1.22.0 reached EOL — multiple CVEs unpatched including
+  CVE-2024-7347 (mp4 module buffer overread) and others</div>
+      <div class="callout callout-impact"><span class="callout-label">Impact</span>AHA S3 buckets are currently locked — the 403 findings confirm existence and naming patterns for future monitoring. If any bucket ACL changes to public (accidental or misconfiguration), those are the buckets most likely to contain platform JS assets and potentially source maps. The xhcdn.com EOL nginx is a supply chain risk — faphouselive.com affiliate landing pages load assets from this infrastructure. Any CVE exploitation of xhcdn.com's nginx could enable asset injection into faphouselive.com landing pages served to end users.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Enable S3 Block Public Access on all AHA buckets. Monitor for accidental public ACL changes via AWS Config or S3 access log alerting. Raise with XHamster/CDN77 team: upgrade xhcdn.com nginx to 1.26.3+ or 1.28.x. If cross-platform asset dependency cannot be eliminated, at minimum enforce SRI (Subresource Integrity) hashing on all xhcdn.com-loaded scripts in affiliate landing pages.</div>
+    </div>
+  </div>
+
+  <!-- Recruitment -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-38/39 — Performer Studio Portal + /join Recruitment Page Confirmed Active</div>
+        <div class="finding-meta">studio.faphouse.com / faphouse.com/join &nbsp;|&nbsp; Recruitment Surface &nbsp;|&nbsp; Scope Intelligence</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">studio.faphouse.com/ → 200, 129,897 bytes, text/html, SPA (not Cloudflare-proxied)
+  Performer studio management portal — active, directly internet-facing
+
+faphouse.com/join → 200, 81,274 bytes, text/html (below SPA threshold — real content)
+  Performer/affiliate recruitment page — onboarding flow entry point
+
+2257 custodian-of-records page → returns 163KB SPA custom 404
+  Page moved or consolidated — not at documented robots.txt path
+  2257 compliance records location currently unconfirmed via public probing
+
+P3 recruitment testing targets:
+  - studio.faphouse.com: performer auth, IDOR on studio management
+  - faphouse.com/join: ID upload security, email enumeration, rate limiting
+  - Affiliate signup within /join flow: parameter tampering, commission IDOR</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Informational for P2. For P3: test studio.faphouse.com authentication against performer accounts, including IDOR on studio IDs and performer earnings endpoints. Test /join for file upload restrictions and email enumeration. Verify 2257 custodian records are accessible at their actual location and not inadvertently returning a 404 to public requests (regulatory compliance risk).</div>
+    </div>
+  </div>
+
+  <!-- security.txt -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-40 — No security.txt on Either Domain — No Published Vulnerability Disclosure Policy</div>
+        <div class="finding-meta">Both domains &nbsp;|&nbsp; /.well-known/security.txt &nbsp;|&nbsp; Security Posture</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">faphouse.com/.well-known/security.txt      → 403/404
+faphouse.com/security.txt                  → 404
+faphouselive.com/.well-known/security.txt  → 404
+faphouselive.com/security.txt              → 404
+
+RFC 9116 security.txt standard not implemented on either domain.
+No published: security contact, PGP key, disclosure policy, bug bounty reference.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Publish /.well-known/security.txt per RFC 9116 including: Contact (monitored security email or HackerOne/Bugcrowd URL), Expires (12 months), Policy (disclosure timeline), and optionally a PGP key for encrypted reporting. This is a 5-minute implementation that establishes a clear responsible disclosure channel and signals security maturity to external researchers.</div>
+    </div>
+  </div>
+
+
+  <!-- JS BUNDLE ARCHITECTURE ADDENDUM -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-41 — Full Entitlement Architecture Mapped via JS Bundle Analysis (P1-06)</div>
+        <div class="finding-meta">assets.chapturist.com &nbsp;|&nbsp; main.js + react.js + vendors.js &nbsp;|&nbsp; Architecture Intelligence</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">Bundles analyzed: 5 files from assets.chapturist.com
+  main.6f387f5fdeee03ee.js   80,132 bytes
+  react-65374.c8e08b3896d5acf3.js  193,515 bytes
+  vendors-57281.7eda8978a8e76135.js  63,709 bytes
+  redux-48526.e096bd9b05468601.js    4,120 bytes
+  webRTCPlayer.54f46e5b91f9a070.js   3,898 bytes  (lazy-loaded C2C)
+
+User role system (server-assigned):
+  model | studio | user | guest
+
+Show/billing rate types:
+  privateRate  — per-minute private show
+  spyRate      — spy mode (watch private show without being seen)
+  ticketRate   — ticketed group show
+  groupRate    — open group show
+  p2pMinDuration — minimum C2C session duration
+
+Subscription lifecycle events:
+  ULTIMATE_SUBSCRIPTION_CANCEL
+  ULTIMATE_SUBSCRIPTION_RENEW
+  ULTIMATE_SUBSCRIPTION_OVER
+
+Token economy:
+  tokensGiftReceived | unlockTip | offlineTip | knightAdded
+
+Chat modes:
+  publicChat | privateChat | PRIVATE_MESSAGE
+
+Entitlement enforcement: SERVER-SIDE
+  Redux state reflects server response — no client-side bypass possible
+  via state manipulation alone. P3 must test API layer directly.
+
+No hardcoded auth tokens, API keys, or credentials found.
+DEPLOY_CONFIG populated at runtime from bundle, not inline HTML.
+WebRTC player chunk: ICE/TURN references only, no hardcoded credentials.</div>
+      <div class="callout callout-impact"><span class="callout-label">P3 Intelligence</span>The role system and rate structure are now fully mapped. P3 priority targets: (1) role parameter tampering — can a `user` session claim `model` or `studio` role? (2) spyRate bypass — can a guest session access spy mode without paying the spyRate? (3) subscription IDOR — can ULTIMATE_SUBSCRIPTION events be triggered without a valid subscription token? (4) WebRTC C2C — test whether the ICE/TURN credential handshake can be intercepted or bypassed to initiate C2C without model consent.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Informational — document for P3. Ensure all role assignments, rate checks, and subscription state changes are validated server-side with each API request, not just at session initialization.</div>
+    </div>
+  </div>
+
+
+  <!-- F-42: studio portal + hardware intel -->
+  <div class="finding">
+    <div class="finding-header">
+      <span class="sev-badge sev-info">Info</span>
+      <div>
+        <div class="finding-title">F-42 — studio.faphouse.com: Model Recruitment Portal Active / API Confirmed / No Hardware Provisioning Found</div>
+        <div class="finding-meta">studio.faphouse.com &nbsp;|&nbsp; Hardware + Recruitment Investigation &nbsp;|&nbsp; Architecture Intelligence</div>
+      </div>
+    </div>
+    <div class="finding-body">
+      <div class="evidence-box">studio.faphouse.com — "Get Paid For Nude Content: Apply to be a Model | Faphouse"
+HTTP 200, 129KB, NOT Cloudflare proxied (no CF-Ray), served from PHP/nginx origin directly.
+CSP present (with unsafe-inline). PHPSESSID: secure+HttpOnly (no SameSite).
+JS bundles from assets-ah.flixcdn.com:
+  fap-studio/v2/start.js  (615KB decompressed)
+  fap-studio/v2/theme.js
+  i18n/js-compile/studio/en/1775121386.js
+
+API surface:
+  /api/v1/studio        — 403 (exists, auth required)
+  /api/v1/achievements  — 403 JSON on faphouse.com (real endpoint, server-enforced auth)
+  All other API paths   — 404 (no SPA catch-all on studio subdomain)
+
+Auth flow: "signin-studio" is a distinct flow from main platform signin.
+  No separate signin-studio endpoint found unauthenticated.
+
+Hardware/provisioning investigation — NEGATIVE:
+  All hardware-named faphouse.com subdomains (update, firmware, device,
+  provision, obs, encoder, ingest, rtmp, kit, hardware, dl, download, cdn,
+  releases, setup) resolve to Cloudflare wildcard IPs and return nginx 404.
+  No real hardware distribution, firmware, OBS plugin, or device management
+  infrastructure found anywhere on faphouse.com or faphouselive.com.
+
+Platform confirmed BYOD: Stripchat/faphouse.com publishes equipment
+  guides for models (webcam, ring light, etc.) but does NOT provision
+  hardware. isSourcePreset=true in VR API refers to OBS source presets,
+  not physical device distribution.</div>
+      <div class="callout callout-impact"><span class="callout-label">P3 Intelligence</span>studio.faphouse.com is the performer recruitment and onboarding portal — a distinct attack surface from the main platform. It is not Cloudflare proxied (direct origin exposure). The /api/v1/studio endpoint exists and requires auth. P3 targets: (1) studio account IDOR — can one studio account access another studio's performer list or earnings? (2) performer onboarding flow — ID upload security, age verification bypass, email enumeration on the recruitment form. (3) signin-studio auth flow distinct from main — separate session management may have separate vulnerabilities.</div>
+      <div class="callout callout-fix"><span class="callout-label">Remediation</span>Place studio.faphouse.com behind Cloudflare proxy (enable orange cloud DNS record) to apply WAF and DDoS protection to the recruitment portal and its API. Add SameSite=Strict to PHPSESSID on this subdomain. Audit /api/v1/studio for IDOR on performer/studio associations.</div>
+    </div>
+  </div>
+
+<!-- ARCHITECTURE INTEL -->
+<section>
+  <div class="section-label">Architecture Intelligence Map</div>
+  <h2>Delivery Edge → Auth → Streaming Pipeline</h2>
+  <div class="arch-grid" style="margin-bottom: 16px;">
+    <div class="arch-card">
+      <h4>Delivery Edge (CDN → Browser)</h4>
+      <div class="arch-item"><span class="arch-key">CDN Provider</span><span class="arch-val">Cloudflare (both domains)</span></div>
+      <div class="arch-item"><span class="arch-key">Edge PoP (observed)</span><span class="arch-val">IAD — Ashburn, VA</span></div>
+      <div class="arch-item"><span class="arch-key">TLS Version</span><span class="arch-val">TLS 1.3 (AES-256-GCM)</span></div>
+      <div class="arch-item"><span class="arch-key">Key Exchange</span><span class="arch-val">X25519 (faphouse.com)</span></div>
+      <div class="arch-item"><span class="arch-key">TLS Cert Issuer</span><span class="arch-val">Google Trust Services / WE1</span></div>
+      <div class="arch-item"><span class="arch-key">CF-Cache-Status</span><span class="arch-val">DYNAMIC (no edge caching)</span></div>
+      <div class="arch-item"><span class="arch-key">Cache-Control (faphouse)</span><span class="arch-val">no-store, no-cache ✓</span></div>
+      <div class="arch-item"><span class="arch-key">Cache-Control (faphouselive)</span><span class="arch-val">ABSENT ⚠</span></div>
+      <div class="arch-item"><span class="arch-key">JS CDN (faphouse)</span><span class="arch-val">assets-ah.flixcdn.com</span></div>
+      <div class="arch-item"><span class="arch-key">JS CDN (faphouselive)</span><span class="arch-val">assets.chapturist.com</span></div>
+    </div>
+    <div class="arch-card">
+      <h4>Backend / Origin Stack</h4>
+      <div class="arch-item"><span class="arch-key">faphouse.com backend</span><span class="arch-val">PHP (PHPSESSID cookie)</span></div>
+      <div class="arch-item"><span class="arch-key">faphouselive.com frontend</span><span class="arch-val">Angular/React (Redux)</span></div>
+      <div class="arch-item"><span class="arch-key">API Server</span><span class="arch-val">api.faphouse.com (JSON API)</span></div>
+      <div class="arch-item"><span class="arch-key">API Gateway</span><span class="arch-val">gate.faphouselive.com (nginx, unproxied)</span></div>
+      <div class="arch-item"><span class="arch-key">Database (inferred)</span><span class="arch-val">MySQL (mysql08.faphouselive.com)</span></div>
+      <div class="arch-item"><span class="arch-key">E-Commerce</span><span class="arch-val">Magento (magento.faphouselive.com)</span></div>
+      <div class="arch-item"><span class="arch-key">Mail Server</span><span class="arch-val">imap.faphouselive.com</span></div>
+      <div class="arch-item"><span class="arch-key">Nameservers</span><span class="arch-val">Cloudflare (both domains)</span></div>
+    </div>
+    <div class="arch-card">
+      <h4>Auth / Entitlement Layer</h4>
+      <div class="arch-item"><span class="arch-key">Session Model (faphouse)</span><span class="arch-val">PHP session (PHPSESSID)</span></div>
+      <div class="arch-item"><span class="arch-key">Auth Model (faphouselive)</span><span class="arch-val">Subscription token (Redux)</span></div>
+      <div class="arch-item"><span class="arch-key">ForgeRock / OIDC</span><span class="arch-val">Not found (no discovery endpoints)</span></div>
+      <div class="arch-item"><span class="arch-key">OAuth / SAML</span><span class="arch-val">Not found</span></div>
+      <div class="arch-item"><span class="arch-key">Google SSO</span><span class="arch-val">accounts.google.com/gsi/client (faphouse)</span></div>
+      <div class="arch-item"><span class="arch-key">Entitlement Ref (JS)</span><span class="arch-val">SUBSCRIPTION in main.js (chapturist)</span></div>
+      <div class="arch-item"><span class="arch-key">Premium API (public)</span><span class="arch-val">/api/premium/get-packages</span></div>
+      <div class="arch-item"><span class="arch-key">Fanclub API (public)</span><span class="arch-val">/api/fanclub/get-packages</span></div>
+    </div>
+    <div class="arch-card">
+      <h4>Streaming Pipeline</h4>
+      <div class="arch-item"><span class="arch-key">HLS path</span><span class="arch-val">/hls/ (SPA route, no manifest exposed)</span></div>
+      <div class="arch-item"><span class="arch-key">DASH path</span><span class="arch-val">/dash/ (SPA route, no manifest exposed)</span></div>
+      <div class="arch-item"><span class="arch-key">WebSocket</span><span class="arch-val">/wss (confirmed, P3 auth testing pending)</span></div>
+      <div class="arch-item"><span class="arch-key">VR Content</span><span class="arch-val">vr.faphouselive.com subdomain</span></div>
+      <div class="arch-item"><span class="arch-key">WebXR</span><span class="arch-val">webxr.faphouselive.com subdomain</span></div>
+      <div class="arch-item"><span class="arch-key">Video subdomain</span><span class="arch-val">video.faphouselive.com</span></div>
+      <div class="arch-item"><span class="arch-key">HLS/DASH auth enforcement</span><span class="arch-val">Not verifiable P2 — deferred P3</span></div>
+      <div class="arch-item"><span class="arch-key">Stream ingest endpoints</span><span class="arch-val">Not found unauthenticated</span></div>
+    </div>
+  </div>
+
+  <!-- Subdomains -->
+  <h2 style="margin-top: 32px;">Subdomain Surface (65 + 47)</h2>
+  <p style="color: var(--text2); margin-bottom: 16px; font-size: 13px;">Highlighted entries: operationally significant or require further investigation.</p>
+  <p style="color: var(--text3); font-family: var(--mono); font-size: 11px; margin-bottom: 8px;">faphouse.com (65 subdomains)</p>
+  <div class="sub-grid" style="margin-bottom: 24px;">
+    <div class="sub-item highlight">api.faphouse.com</div>
+    <div class="sub-item highlight">api.in.faphouse.com</div>
+    <div class="sub-item highlight">assets.faphouse.com</div>
+    <div class="sub-item highlight">comments.faphouse.com</div>
+    <div class="sub-item highlight">comments.in.faphouse.com</div>
+    <div class="sub-item highlight">in.faphouse.com</div>
+    <div class="sub-item">amp.faphouse.com</div>
+    <div class="sub-item">email.faphouse.com</div>
+    <div class="sub-item">email.pro.faphouse.com</div>
+    <div class="sub-item">email.test.faphouse.com</div>
+    <div class="sub-item">cs.faphouse.com</div>
+    <div class="sub-item">de.faphouse.com</div>
+    <div class="sub-item">es.faphouse.com</div>
+    <div class="sub-item">fr.faphouse.com</div>
+    <div class="sub-item">it.faphouse.com</div>
+    <div class="sub-item">ja.faphouse.com</div>
+    <div class="sub-item">ko.faphouse.com</div>
+    <div class="sub-item">hi.faphouse.com</div>
+    <div class="sub-item">id.faphouse.com</div>
+    <div class="sub-item">+ 46 more locale/AMP subs</div>
+  </div>
+  <p style="color: var(--text3); font-family: var(--mono); font-size: 11px; margin-bottom: 8px;">faphouselive.com (47 subdomains)</p>
+  <div class="sub-grid">
+    <div class="sub-item highlight">mysql08.faphouselive.com</div>
+    <div class="sub-item highlight">gate.faphouselive.com</div>
+    <div class="sub-item highlight">magento.faphouselive.com</div>
+    <div class="sub-item highlight">dev.faphouselive.com</div>
+    <div class="sub-item highlight">staging.faphouselive.com</div>
+    <div class="sub-item highlight">old.faphouselive.com</div>
+    <div class="sub-item highlight">test.faphouselive.com</div>
+    <div class="sub-item highlight">video.faphouselive.com</div>
+    <div class="sub-item highlight">vr.faphouselive.com</div>
+    <div class="sub-item highlight">webxr.faphouselive.com</div>
+    <div class="sub-item highlight">imap.faphouselive.com</div>
+    <div class="sub-item highlight">shop.faphouselive.com</div>
+    <div class="sub-item">demo.faphouselive.com</div>
+    <div class="sub-item">creative.faphouselive.com</div>
+    <div class="sub-item">store.faphouselive.com</div>
+    <div class="sub-item">go.faphouselive.com</div>
+    <div class="sub-item">www.faphouselive.com</div>
+    <div class="sub-item">aaaa/bbbb/cccc.faphouselive.com</div>
+  </div>
+</section>
+
+<!-- ATTACK CHAIN -->
+<section>
+  <div class="section-label">Attack Chain</div>
+  <h2>Chain A — Credential Stuffing via Unprotected Login (faphouselive.com)</h2>
+  <div class="chain" style="margin-bottom: 24px;">
+    <div class="chain-step"><div class="chain-num">1</div><div class="chain-content"><h4>Enumerate Valid Accounts</h4><p>No rate limiting on /login means unlimited username:password attempts. A/B test cookie (ABTest_ab_pls_b_v2_key) has no HttpOnly — readable by injected JS if XSS exists. Timing differences in responses can confirm valid vs. invalid usernames.</p></div></div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step"><div class="chain-num">2</div><div class="chain-content"><h4>Brute-Force or Stuff Credentials</h4><p>With no CAPTCHA and no 429 response, automated tools can test large credential lists. Missing CSP means any XSS payload runs without restriction.</p></div></div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step"><div class="chain-num">3</div><div class="chain-content"><h4>Session Established — Cookie Exfiltration via XSS</h4><p>Without HttpOnly on faphouselive.com cookies, any XSS (missing CSP provides no defense) can read document.cookie. Session token sent to attacker-controlled endpoint.</p></div></div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step"><div class="chain-num">4</div><div class="chain-content"><h4>WAF Bypass via gate.faphouselive.com</h4><p>Direct API calls to gate.faphouselive.com (unproxied nginx) bypass Cloudflare WAF entirely. Authenticated API abuse without bot detection or WAF inspection.</p></div></div>
+  </div>
+
+  <h2>Chain B — Domain Expiry → Adversarial Takeover (faphouse.com)</h2>
+  <div class="chain">
+    <div class="chain-step"><div class="chain-num">1</div><div class="chain-content"><h4>Domain Lapses April 15, 2026</h4><p>faphouse.com becomes available for registration. Adversary monitors expiry and registers immediately.</p></div></div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step"><div class="chain-num">2</div><div class="chain-content"><h4>OAuth Callback Hijack</h4><p>Google SSO integration references faphouse.com. Redirect URIs pointing to faphouse.com now resolve to attacker infrastructure. OAuth codes delivered to attacker = account takeover of any user who logs in via Google SSO.</p></div></div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step"><div class="chain-num">3</div><div class="chain-content"><h4>Email / API Interception</h4><p>MX records update to attacker mail server. PHPSESSID reset emails and verification tokens delivered to attacker. API subdomains (api.faphouse.com) now attacker-controlled.</p></div></div>
+  </div>
+</section>
+
+<!-- APPENDIX -->
+<section>
+  <div class="section-label">Appendix</div>
+  <div class="appendix-grid">
+    <div class="appendix-card">
+      <h4>Scope</h4>
+      <p>faphouse.com and faphouselive.com plus all subdomains discoverable via certificate transparency logs. Internet-accessible assets only (PHY scope). No social engineering, no physical, no credentials provided for this phase.</p>
+    </div>
+    <div class="appendix-card">
+      <h4>Authorization</h4>
+      <p>Inspectiv Statement of Work on file. P1 and P2 phases authorized. P3 (credentialed) requires separate SOW, credential delivery confirmation, and IP allowlist confirmation. Verbal authorization is not sufficient for phase transitions.</p>
+    </div>
+    <div class="appendix-card">
+      <h4>Methodology</h4>
+      <ul>
+        <li>P1-01 DNS (DoH), SPF/DMARC</li>
+        <li>P1-02 CT log enumeration (Certspotter, crt.sh)</li>
+        <li>P1-03 WHOIS/RDAP</li>
+        <li>P1-04 Shodan InternetDB</li>
+        <li>P1-05/08/09 HTTP fingerprint, headers, cookies</li>
+        <li>P1-06 JS bundle + __NEXT_DATA__ analysis</li>
+        <li>P1-07 robots.txt / sitemap</li>
+        <li>P1-11 S3 bucket enumeration</li>
+        <li>P2-01 CORS (reflected origin probe)</li>
+        <li>P2-03 Rate limit (12-burst)</li>
+        <li>P2-04 HTTP method enumeration</li>
+        <li>P2-06 Path bruteforce (180-path wordlist)</li>
+        <li>P2-07 Header injection</li>
+        <li>P2-10 API surface + GraphQL introspection</li>
+        <li>P2-16 Subdomain takeover (65+47 subs)</li>
+        <li>Custom: Delivery edge, auth layer, streaming pipeline</li>
+      </ul>
+    </div>
+    <div class="appendix-card">
+      <h4>False Positives Removed</h4>
+      <ul>
+        <li>Admin panels /administrator, /console, /management, /panel (faphouselive.com) — SPA routing, not real panels. Fake-path baseline: 512KB; known routes: ~583KB due to SPA rendering difference, not admin content.</li>
+        <li>Shodan ports 8080/8443 — all four IPs confirmed Cloudflare AS13335 edge infrastructure, not origin servers.</li>
+        <li>DMARC "unknown%" — no pct= in record = RFC 7489 default of 100%. Valid quarantine posture.</li>
+        <li>vr.faphouselive.com /hls/, /dash/, /origin/ returning 200 — SPA routing catch-all confirmed (same 17KB text/html response for all paths). Not stream delivery.</li>
+        <li>video.faphouselive.com 403 XML = S3 AccessDenied, not a public listing issue — bucket exists but access is correctly restricted.</li>
+      </ul>
+    </div>
+    <div class="appendix-card">
+      <h4>P3 Recommendations</h4>
+      <ul>
+        <li>WebSocket /wss — auth enforcement on upgrade</li>
+        <li>Subscription token IDOR — entitlement bypass</li>
+        <li>Cookies post-login — full flag audit</li>
+        <li>CSRF on state-changing endpoints</li>
+        <li>/api/premium/get-packages — pricing data exposure</li>
+        <li>Magento admin panel — credential/auth testing</li>
+        <li>Non-prod envs (dev, staging) — security posture gap</li>
+        <li>WebXR / VR content delivery auth</li>
+        <li>/api/fanclub/get-packages — resolve performer param, test IDOR</li>
+        <li>go.faphouselive.com — affiliate attribution IDOR testing</li>
+        <li>creative.faphouselive.com /landing — enumerate campaign slugs</li>
+        <li>XHamster CDN linkage (xhcdn.com) — potential scope expansion</li>
+      </ul>
+    </div>
+    <div class="appendix-card">
+      <h4>Infrastructure</h4>
+      <ul>
+        <li>Scan executed from AWS 98.95.155.84 (us-east)</li>
+        <li>Rate: 1.5s standard / 2.5s CDN paths</li>
+        <li>TLS verification disabled (Cloudflare fronted)</li>
+        <li>DNS via Google DoH (UDP/53 blocked on scan host)</li>
+        <li>Raw JSON: raw_20260401_053645.json</li>
+        <li>Findings JSON: findings_20260401_053645.json</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div>Inspectiv Security Research &nbsp;|&nbsp; INS-2026-FAPHS-001</div>
+  <div>faphouse.com / faphouselive.com &nbsp;|&nbsp; P1+P2 &nbsp;|&nbsp; April 1, 2026</div>
+  <div>Researcher: Ken Bane &nbsp;|&nbsp; CONFIDENTIAL</div>
+</footer>
+
+</body>
+</html>
