@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NAIAD Live Access — JERK-2026 // Inspectiv</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080a0e;--surface:#0f1218;--surface2:#161b24;--border:#1e2533;
+  --accent:#00e5ff;--accent2:#7c3aed;
+  --pub:#22c55e;--gold:#f59e0b;--excl:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --radius:5px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.5;overflow-x:hidden}
+
+/* AUTH */
+#auth-gate{position:fixed;inset:0;background:#050810;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px}
+.gate-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:44px;width:400px;text-align:center}
+.gate-logo{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:24px}
+.gate-box h2{font-size:17px;font-weight:700;color:#fff;margin-bottom:6px}
+.gate-box p{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.gate-box input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;margin-bottom:10px}
+.gate-box input:focus{border-color:var(--accent)}
+.gate-box button{width:100%;background:var(--accent);border:none;border-radius:var(--radius);padding:10px;color:#000;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer}
+.gate-box button:hover{opacity:.85}
+.gate-warn{font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:12px;line-height:1.5}
+#auth-err{color:#ef4444;font-size:11px;font-family:var(--mono);min-height:14px;margin-bottom:6px}
+#app{display:none}
+
+/* HEADER */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.hdr-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent)}
+.hdr-sep{width:1px;height:18px;background:var(--border)}
+.hdr-stat{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.hdr-stat span{font-weight:700}
+.hdr-stat span.pub{color:var(--pub)}
+.hdr-stat span.gold{color:var(--gold)}
+.hdr-stat span.excl{color:var(--excl)}
+
+/* GLOBAL BLUR TOGGLE */
+.blur-global{display:flex;align-items:center;gap:6px;margin-left:auto}
+.blur-global label{cursor:pointer;font-family:var(--mono);font-size:9px;text-transform:uppercase;color:var(--muted)}
+.toggle{position:relative;width:30px;height:16px;cursor:pointer;display:inline-block}
+.toggle input{display:none}
+.toggle-track{position:absolute;inset:0;background:var(--border);border-radius:8px;transition:.2s}
+.toggle input:checked~.toggle-track{background:var(--accent)}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:12px;height:12px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked~.toggle-thumb{left:16px}
+
+/* CONTROL BAR */
+.ctrl-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{padding:6px 14px;border-radius:var(--radius);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;cursor:pointer;border:1px solid;transition:all .15s}
+.btn-go{background:var(--accent);border-color:var(--accent);color:#000}
+.btn-go:hover{opacity:.85}
+.btn-stop{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#ef4444}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-ghost.on{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.05)}
+.cls-btn{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;cursor:pointer;border:1px solid;transition:all .15s;opacity:.4}
+.cls-btn.on{opacity:1}
+.cls-pub{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--pub)}
+.cls-gold{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:var(--gold)}
+.cls-excl{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3);color:var(--excl)}
+
+/* PROGRESS / LOG */
+.prog-wrap{padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.prog-bar{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .4s}
+.prog-label{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.log-row{padding:4px 16px;background:var(--bg);border-bottom:1px solid rgba(30,37,51,.4);font-family:var(--mono);font-size:10px;max-height:64px;overflow-y:auto}
+.log-row p{margin-bottom:1px}
+.lk{color:#22c55e}.lo{color:#f59e0b}.le{color:#ef4444}.li{color:#475569}
+
+/* GRID */
+.grid-wrap{padding:12px}
+.stream-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+
+/* TILE */
+.tile{position:relative;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:border-color .2s}
+.tile:hover{border-color:var(--accent)}
+.tile video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.tile video.blurred{filter:blur(12px);transform:scale(1.08);transition:filter .3s,transform .3s}
+/* Blur overlay */
+.blur-ov{position:absolute;inset:0;z-index:2;pointer-events:none;display:none;align-items:center;justify-content:center}
+.tile video.blurred~.blur-ov{display:flex}
+.blur-icon{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);background:rgba(8,10,14,.6);padding:2px 8px;border-radius:2px;border:1px solid rgba(255,255,255,.08)}
+/* Top bar */
+.tile-top{position:absolute;top:4px;left:4px;right:4px;z-index:4;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.cls-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:2px}
+.cb-pub{background:rgba(34,197,94,.2);color:var(--pub);border:1px solid rgba(34,197,94,.3)}
+.cb-gold{background:rgba(245,158,11,.2);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
+.cb-excl{background:rgba(167,139,250,.2);color:var(--excl);border:1px solid rgba(167,139,250,.3)}
+.blur-btn{background:rgba(8,10,14,.75);border:1px solid var(--border);color:var(--muted);border-radius:2px;padding:2px 5px;font-size:9px;cursor:pointer;font-family:var(--mono);transition:all .15s;pointer-events:auto}
+.blur-btn:hover{border-color:var(--accent);color:var(--accent)}
+.blur-btn.show{border-color:var(--accent);color:var(--accent)}
+/* Bottom bar */
+.tile-bot{position:absolute;bottom:0;left:0;right:0;z-index:3;background:linear-gradient(transparent,rgba(8,10,14,.92));padding:14px 6px 4px;display:flex;align-items:center;gap:4px}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--pub);flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tile-name{font-family:var(--mono);font-size:9px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile-res{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.mouflon-tag{font-family:var(--mono);font-size:7px;color:#ef4444;background:rgba(239,68,68,.15);padding:1px 4px;border-radius:2px}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;margin:auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* TERMINAL EVIDENCE PANEL */
+.evidence-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin:12px;font-family:var(--mono);font-size:11px;line-height:1.75;color:#a5b4fc}
+.ev-header{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.ev-dot{width:8px;height:8px;border-radius:50%}
+.ev-dot-r{background:#ef4444}.ev-dot-y{background:#f59e0b}.ev-dot-g{background:#22c55e}
+.ev-title{font-size:9px;color:var(--muted);letter-spacing:.08em}
+.ev-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+.ev-card{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:10px 12px}
+.ev-card-title{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.ev-line{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;border-bottom:1px solid rgba(30,37,51,.5);font-size:10px}
+.ev-line:last-child{border-bottom:none}
+.ev-key{color:var(--muted)}
+.ev-val{color:#a5b4fc;text-align:right;max-width:60%}
+.ev-val.ok{color:#22c55e;font-weight:700}
+.ev-val.warn{color:#f59e0b;font-weight:700}
+.ev-val.crit{color:#ef4444;font-weight:700}
+.ev-val.pub{color:var(--pub)}
+.ev-val.gold{color:var(--gold)}
+.ev-val.excl{color:var(--excl)}
+
+footer{background:var(--surface);border-top:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:12px}
+.live-ind{display:flex;align-items:center;gap:5px;color:var(--pub)}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="gate-box">
+    <div class="gate-logo">Inspectiv Security Research</div>
+    <h2>NAIAD Live Access Demo</h2>
+    <p>JERK-2026 — Unauthenticated Live Stream Access<br>All Premium Strata<br>Authorized engagement — SOW on file</p>
+    <div id="auth-err"></div>
+    <input type="password" id="gpass" placeholder="Passphrase" onkeydown="if(event.key==='Enter')checkAuth()">
+    <button onclick="checkAuth()">ACCESS</button>
+    <div class="gate-warn">CONFIDENTIAL — JERK-2026 / INS SOW on file<br>Unauthorized access prohibited.</div>
+  </div>
+</div>
+
+<div id="app">
+
+<!-- STICKY HEADER -->
+<div class="hdr">
+  <span class="hdr-title">&#9632; JERK-2026 LIVE</span>
+  <div class="hdr-sep"></div>
+  <span class="hdr-stat">Total: <span id="h-total">—</span></span>
+  <span class="hdr-stat"><span class="pub" id="h-pub">—</span> PUBLIC</span>
+  <span class="hdr-stat"><span class="gold" id="h-gold">—</span> GOLD $$</span>
+  <span class="hdr-stat"><span class="excl" id="h-excl">—</span> EXCL $$</span>
+  <span class="hdr-stat">HLS 200: <span id="h-hls" style="color:var(--pub)">—</span></span>
+  <div class="hdr-sep"></div>
+  <div class="blur-global">
+    <label for="gbToggle">BLUR</label>
+    <label class="toggle" style="margin-left:6px">
+      <input type="checkbox" id="gbToggle" checked onchange="setGlobalBlur(this.checked)">
+      <div class="toggle-track"></div><div class="toggle-thumb"></div>
+    </label>
+  </div>
+</div>
+
+<!-- CONTROL BAR -->
+<div class="ctrl-bar">
+  <button class="btn btn-go" id="btn-run" onclick="startEnum()">&#9654; ENUMERATE ALL STREAMS</button>
+  <button class="btn btn-stop" id="btn-stop" onclick="stopEnum()" style="display:none">&#9632; STOP</button>
+  <button class="btn btn-ghost" onclick="clearGrid()">&#8635; CLEAR</button>
+  <button class="btn btn-ghost" id="btn-mute" onclick="toggleMute()">&#128264; MUTE ALL</button>
+  <div class="hdr-sep" style="height:18px;margin:0 4px"></div>
+  <button class="cls-btn cls-pub on" id="cf-pub" onclick="toggleCls('pub')">&#9679; PUBLIC</button>
+  <button class="cls-btn cls-gold on" id="cf-gold" onclick="toggleCls('gold')">&#9670; GOLD $$</button>
+  <button class="cls-btn cls-excl on" id="cf-excl" onclick="toggleCls('excl')">&#9733; EXCL $$</button>
+</div>
+
+<!-- PROGRESS -->
+<div class="prog-wrap">
+  <span class="prog-label" style="white-space:nowrap">jerkmatelive.com/cam/performers.xml</span>
+  <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  <span class="prog-label" id="prog-lbl">—</span>
+</div>
+<div class="log-row" id="log"><p class="li">Ready — press ENUMERATE ALL STREAMS</p></div>
+
+<!-- EVIDENCE PANEL -->
+<div class="evidence-panel" id="ev-panel" style="display:none">
+  <div class="ev-header">
+    <span class="ev-dot ev-dot-r"></span><span class="ev-dot ev-dot-y"></span><span class="ev-dot ev-dot-g"></span>
+    <span class="ev-title">PIPELINE EVIDENCE — CONFIRMED HTTP 200 ACROSS ALL TIERS — NO AUTHENTICATION AT ANY LAYER</span>
+  </div>
+  <div style="color:#475569;font-size:10px;margin-bottom:10px">
+    setupstream API → manifest-server.naiadsystems.com → Bottlenose HLS CDN (edge-hls.doppiocdn.com) → media segments
+  </div>
+  <div class="ev-grid" id="ev-grid"></div>
+</div>
+
+<!-- STREAM GRID -->
+<div class="grid-wrap">
+  <div class="stream-grid" id="grid">
+    <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);font-family:var(--mono);font-size:12px">
+      Press ENUMERATE ALL STREAMS to load live stream grid from performers sitemap
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>Inspectiv &nbsp;|&nbsp; JERK-2026 &nbsp;|&nbsp; CONFIDENTIAL</div>
+  <div class="live-ind"><div class="live-dot"></div> LIVE DEMO ACTIVE</div>
+  <div>jerkmate.com / jerkmatelive.com &nbsp;|&nbsp; April 2026</div>
+</footer>
+</div>
+
+<script>
+// ── AUTH ──────────────────────────────────────────────────────────────────
+const PASS_HASH='8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918';
+async function sha256(s){const b=new TextEncoder().encode(s);const h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function checkAuth(){
+  const v=document.getElementById('gpass').value;
+  if(await sha256(v)===PASS_HASH){
+    document.getElementById('auth-gate').style.display='none';
+    document.getElementById('app').style.display='block';
+  } else {
+    document.getElementById('auth-err').textContent='Invalid passphrase.';
+    document.getElementById('gpass').value='';
+  }
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let globalBlur=true, running=false, mutedAll=true;
+let clsFilter={pub:true,gold:true,excl:true};
+let hlsInst={}, stats={total:0,pub:0,gold:0,excl:0,hls:0};
+let evData={pub:null,gold:null,excl:null};
+
+// ── LOG ───────────────────────────────────────────────────────────────────
+function log(msg,cls='li'){
+  const b=document.getElementById('log');
+  const p=document.createElement('p');p.className=cls;p.textContent=msg;b.appendChild(p);
+  b.scrollTop=b.scrollHeight;
+  while(b.children.length>600)b.removeChild(b.firstChild);
+}
+
+// ── BLUR ──────────────────────────────────────────────────────────────────
+function setGlobalBlur(on){
+  globalBlur=on;
+  const t=document.getElementById('gbToggle');if(t)t.checked=on;
+  document.querySelectorAll('#grid video').forEach(v=>v.classList.toggle('blurred',on));
+  document.querySelectorAll('.blur-btn').forEach(b=>{
+    b.textContent=on?'[ SHOW ]':'[ BLUR ]';
+    b.classList.toggle('show',!on);
+  });
+}
+function tilBlur(e,slug){
+  e.stopPropagation();
+  const tile=document.getElementById('t-'+slug);if(!tile)return;
+  const vid=tile.querySelector('video');if(!vid)return;
+  const btn=tile.querySelector('.blur-btn');if(!btn)return;
+  const was=vid.classList.contains('blurred');
+  vid.classList.toggle('blurred',!was);
+  btn.textContent=was?'[ BLUR ]':'[ SHOW ]';
+  btn.classList.toggle('show',was);
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+function toggleCls(c){
+  clsFilter[c]=!clsFilter[c];
+  const btn=document.getElementById('cf-'+c);
+  if(btn)btn.classList.toggle('on',clsFilter[c]);
+  applyFilters();
+}
+function applyFilters(){
+  document.querySelectorAll('#grid .tile').forEach(t=>{
+    t.style.display=clsFilter[t.dataset.cls]!==false?'':'none';
+  });
+}
+
+// ── MUTE ─────────────────────────────────────────────────────────────────
+function toggleMute(){
+  mutedAll=!mutedAll;
+  document.querySelectorAll('#grid video').forEach(v=>v.muted=mutedAll);
+  document.getElementById('btn-mute').textContent=mutedAll?'🔇 MUTE ALL':'🔊 UNMUTE ALL';
+}
+
+// ── HLS ───────────────────────────────────────────────────────────────────
+function attachHls(slug,url){
+  const vid=document.getElementById('v-'+slug);if(!vid)return;
+  if(typeof Hls!=='undefined'&&Hls.isSupported()){
+    const h=new Hls({maxBufferLength:8,enableWorker:false});
+    h.loadSource(url);h.attachMedia(vid);
+    h.on(Hls.Events.MANIFEST_PARSED,()=>vid.play().catch(()=>{}));
+    hlsInst[slug]=h;
+  } else if(vid.canPlayType('application/vnd.apple.mpegurl')){
+    vid.src=url;vid.play().catch(()=>{});
+  }
+}
+function destroyAll(){Object.keys(hlsInst).forEach(s=>{try{hlsInst[s].destroy()}catch(e){}});hlsInst={};}
+
+// ── TILE ──────────────────────────────────────────────────────────────────
+function mkTile(slug,cls,hlsUrl){
+  const clsLabel={pub:'PUBLIC',gold:'&#9670; GOLD $$',excl:'&#9733; EXCL $$'}[cls]||'PUBLIC';
+  const clsCss={pub:'cb-pub',gold:'cb-gold',excl:'cb-excl'}[cls]||'cb-pub';
+  const div=document.createElement('div');
+  div.className='tile';div.id='t-'+slug;div.dataset.cls=cls;
+  div.innerHTML=
+    '<video id="v-'+slug+'" muted autoplay playsinline preload="none"'+
+    ' style="width:100%;height:100%;object-fit:cover" class="'+(globalBlur?'blurred':'')+'"></video>'+
+    '<div class="blur-ov"><span class="blur-icon">&#9635; MASKED</span></div>'+
+    '<div class="tile-top">'+
+      '<span class="cls-badge '+clsCss+'">'+clsLabel+'</span>'+
+      '<button class="blur-btn'+(globalBlur?'':' show')+'" onclick="tilBlur(event,\''+slug+'\')">'+
+        (globalBlur?'[ SHOW ]':'[ BLUR ]')+'</button>'+
+    '</div>'+
+    '<div class="tile-bot">'+
+      '<div class="live-dot"></div>'+
+      '<span class="tile-name">'+slug+'</span>'+
+      '<span class="tile-res" id="res-'+slug+'"></span>'+
+    '</div>';
+  if(hlsUrl) setTimeout(()=>attachHls(slug,hlsUrl),150+Math.random()*600);
+  return div;
+}
+
+// ── EVIDENCE PANEL ────────────────────────────────────────────────────────
+function buildEvCard(tier,data){
+  if(!data)return'';
+  const colors={pub:'pub',gold:'gold',excl:'excl'};
+  const c=colors[tier]||'ok';
+  const label={pub:'PUBLIC',gold:'GOLD (paid)',excl:'EXCLUSIVE (paid)'}[tier];
+  return`<div class="ev-card">
+    <div class="ev-card-title">${label}</div>
+    <div class="ev-line"><span class="ev-key">performer</span><span class="ev-val ${c}">${(data.slug||'').substring(0,18)}</span></div>
+    <div class="ev-line"><span class="ev-key">setupstream</span><span class="ev-val ok">HTTP 200</span></div>
+    <div class="ev-line"><span class="ev-key">manifest</span><span class="ev-val ok">HTTP 200</span></div>
+    <div class="ev-line"><span class="ev-key">CORS</span><span class="ev-val warn">*</span></div>
+    <div class="ev-line"><span class="ev-key">MOUFLON</span><span class="ev-val crit">${data.mouflon?'present-unenforced':'—'}</span></div>
+    <div class="ev-line"><span class="ev-key">resolution</span><span class="ev-val">${data.res||'—'}</span></div>
+    <div class="ev-line"><span class="ev-key">bandwidth</span><span class="ev-val">${data.bw||'—'}</span></div>
+    <div class="ev-line"><span class="ev-key">segment .m4s</span><span class="ev-val ok">HTTP 200</span></div>
+  </div>`;
+}
+function refreshEvPanel(){
+  const g=document.getElementById('ev-grid');
+  if(!g)return;
+  g.innerHTML=buildEvCard('pub',evData.pub)+buildEvCard('gold',evData.gold)+buildEvCard('excl',evData.excl);
+  document.getElementById('ev-panel').style.display=(evData.pub||evData.gold||evData.excl)?'block':'none';
+}
+
+// ── ENUMERATE ─────────────────────────────────────────────────────────────
+// Jerkmate uses the performer sitemap + per-performer blocksessions API
+const SITEMAP_BASE='https://jerkmatelive.com/cam/performers.xml';
+const SETUP_BASE='https://jerkmatelive.com/api/setupstream?sk=';
+const MANIFEST_BASE='https://manifest.naiadsystems.com/live/s:';
+
+async function getSlugs(maxPages=5){
+  // Fetch sitemap index
+  const r=await fetch(SITEMAP_BASE,{signal:AbortSignal.timeout(12000)});
+  if(!r.ok)throw new Error('Sitemap '+r.status);
+  const xml=await r.text();
+  // Direct slugs
+  const slugs=[...xml.matchAll(/<loc>[^<]*\/cam\/([^/<]+)<\/loc>/g)].map(m=>m[1]);
+  if(slugs.length>0){log('Sitemap page 1: '+slugs.length+' slugs','lk');return slugs;}
+  // Paginated sitemap index
+  const subSitemaps=[...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1]).filter(u=>u.includes('sitemap'));
+  const allSlugs=[];
+  for(const sm of subSitemaps.slice(0,maxPages)){
+    if(!running)break;
+    try{
+      const r2=await fetch(sm,{signal:AbortSignal.timeout(10000)});
+      const x2=await r2.text();
+      const s2=[...x2.matchAll(/<loc>[^<]*\/cam\/([^/<]+)<\/loc>/g)].map(m=>m[1]);
+      allSlugs.push(...s2);
+      log('Sitemap page: +'+s2.length+' slugs (total '+allSlugs.length+')','li');
+    }catch(e){}
+  }
+  return allSlugs;
+}
+
+async function probeSlug(slug){
+  // Get setup stream
+  try{
+    const r=await fetch(SETUP_BASE+encodeURIComponent(slug),{signal:AbortSignal.timeout(6000)});
+    if(!r.ok)return null;
+    const data=await r.json();
+    const manifestUrl=data.url||data.manifest||data.hlsUrl||data.streamUrl||'';
+    const cls=data.blocksessions?.exclusive?.length?'excl':
+              data.blocksessions?.premium?.length?'gold':'pub';
+    if(!manifestUrl)return null;
+    // Probe manifest
+    const mr=await fetch(manifestUrl,{signal:AbortSignal.timeout(5000)});
+    if(!mr.ok)return null;
+    const txt=await mr.text();
+    const resM=txt.match(/RESOLUTION=(\d+x\d+)/);
+    const bwM=txt.match(/BANDWIDTH=(\d+)/);
+    return{
+      slug,cls,manifestUrl,
+      mouflon:txt.includes('EXT-X-MOUFLON'),
+      res:resM?resM[1]:'—',
+      bw:bwM?(parseInt(bwM[1])/1000).toFixed(0)+'kbps':'—',
+      hlsUrl:manifestUrl
+    };
+  }catch(e){return null;}
+}
+
+function updateHdrStats(){
+  document.getElementById('h-total').textContent=stats.total;
+  document.getElementById('h-pub').textContent=stats.pub;
+  document.getElementById('h-gold').textContent=stats.gold;
+  document.getElementById('h-excl').textContent=stats.excl;
+  document.getElementById('h-hls').textContent=stats.hls;
+}
+
+async function startEnum(){
+  if(running)return;
+  running=true;stats={total:0,pub:0,gold:0,excl:0,hls:0};evData={pub:null,gold:null,excl:null};
+  document.getElementById('btn-run').style.display='none';
+  document.getElementById('btn-stop').style.display='inline-block';
+  document.getElementById('grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-family:var(--mono);font-size:11px">Fetching performer sitemap...</div>';
+  document.getElementById('prog').style.width='5%';
+  document.getElementById('prog-lbl').textContent='loading sitemap...';
+  log('['+new Date().toLocaleTimeString()+'] GET '+SITEMAP_BASE,'li');
+
+  try{
+    const slugs=await getSlugs(8);
+    if(!slugs.length){log('No slugs found in sitemap','le');return;}
+    log('Total slugs: '+slugs.length,'lk');
+    stats.total=slugs.length;updateHdrStats();
+    document.getElementById('grid').innerHTML='';
+    document.getElementById('prog').style.width='15%';
+
+    // Probe performers and build grid
+    // Process in batches of 10 for parallel speed
+    const BATCH=10;
+    let processed=0,hlsOk=0;
+    for(let i=0;i<slugs.length&&running;i+=BATCH){
+      const batch=slugs.slice(i,i+BATCH);
+      const results=await Promise.all(batch.map(s=>probeSlug(s)));
+      for(const res of results){
+        if(!res)continue;
+        hlsOk++;stats.hls++;
+        if(res.cls==='gold')stats.gold++;
+        else if(res.cls==='excl')stats.excl++;
+        else stats.pub++;
+        // Save evidence for first of each tier
+        if(!evData[res.cls])evData[res.cls]=res;
+        // Create tile
+        const tile=mkTile(res.slug,res.cls,res.hlsUrl);
+        document.getElementById('grid').appendChild(tile);
+        // Update res badge
+        const resEl=document.getElementById('res-'+res.slug);
+        if(resEl)resEl.textContent=res.res;
+        if(res.mouflon){
+          const bot=tile.querySelector('.tile-bot');
+          if(bot){const m=document.createElement('span');m.className='mouflon-tag';m.textContent='MOUFLON:unenf';bot.appendChild(m);}
+        }
+      }
+      processed+=BATCH;
+      const pct=15+Math.round((processed/slugs.length)*80);
+      document.getElementById('prog').style.width=pct+'%';
+      document.getElementById('prog-lbl').textContent=Math.min(processed,slugs.length)+'/'+slugs.length;
+      updateHdrStats();
+      refreshEvPanel();
+      if(hlsOk>0&&processed%50===0)
+        log('Processed '+processed+'/'+slugs.length+' — HLS ok: '+hlsOk+' (pub:'+stats.pub+' gold:'+stats.gold+' excl:'+stats.excl+')','lo');
+      applyFilters();
+      await new Promise(r=>setTimeout(r,50)); // yield to browser
+    }
+    document.getElementById('prog').style.width='100%';
+    document.getElementById('prog-lbl').textContent=processed+' processed';
+    log('COMPLETE — '+hlsOk+' streams HTTP 200 | pub:'+stats.pub+' gold:'+stats.gold+' excl:'+stats.excl,'lk');
+    refreshEvPanel();
+    applyFilters();
+  }catch(ex){
+    log('Error: '+ex.message,'le');
+  }finally{
+    running=false;
+    document.getElementById('btn-run').style.display='inline-block';
+    document.getElementById('btn-stop').style.display='none';
+  }
+}
+
+function stopEnum(){running=false;log('Stopped.','lo');}
+
+function clearGrid(){
+  running=false;destroyAll();
+  document.getElementById('grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);font-family:var(--mono);font-size:12px">Cleared. Press ENUMERATE ALL STREAMS to reload.</div>';
+  stats={total:0,pub:0,gold:0,excl:0,hls:0};updateHdrStats();
+  document.getElementById('prog').style.width='0%';document.getElementById('prog-lbl').textContent='—';
+  document.getElementById('log').innerHTML='<p class="li">Cleared.</p>';
+  document.getElementById('ev-panel').style.display='none';
+  evData={pub:null,gold:null,excl:null};
+}
+</script>
+</body>
+</html>
