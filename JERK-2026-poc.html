@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAIAD-PoC // JERK-2026 // Inspectiv</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080a0e;--surface:#0f1218;--surface2:#161b24;--border:#1e2533;--accent:#00e5ff;--accent2:#ff3d71;--gold:#f59e0b;--excl:#a78bfa;--green:#34d399;--text:#e8edf5;--muted:#4a5568;--radius:6px;--mono:'Space Mono',monospace;--sans:'Syne',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap}
+.logo{font-size:17px;font-weight:800;letter-spacing:-.5px;white-space:nowrap}
+.logo .a{color:var(--accent)}.logo .b{color:var(--accent2)}
+.logo .sub{font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:.1em;margin-left:6px;vertical-align:middle}
+.source-tabs{display:flex;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:3px;flex-shrink:0}
+.source-tab{padding:4px 13px;border-radius:4px;font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;text-transform:uppercase}
+.source-tab.active{background:var(--accent);color:#000}
+.source-tab.naiad.active{background:var(--accent2);color:#fff}
+.source-tab:not(.active):hover{color:var(--text)}
+.controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex:1}
+label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono)}
+select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 7px;border-radius:var(--radius);font-family:var(--mono);font-size:10px;outline:none;cursor:pointer;transition:border-color .2s}
+select:hover,select:focus{border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius);font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;border:none;transition:all .2s;text-transform:uppercase;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{background:#33ecff}
+.btn-danger{background:transparent;border:1px solid var(--accent2);color:var(--accent2)}.btn-danger:hover{background:var(--accent2);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.status-bar{margin-left:auto;display:flex;align-items:center;gap:8px}
+.status-text{font-size:10px;color:var(--muted);font-family:var(--mono);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 1.5s ease-in-out infinite;display:inline-block}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.refresh-progress{width:44px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.refresh-bar{height:100%;background:var(--accent2);width:100%;transform-origin:left}
+@keyframes drain{to{transform:scaleX(0)}}
+#poc-banner{background:linear-gradient(90deg,rgba(255,61,113,.1),rgba(167,139,250,.08));border-bottom:1px solid rgba(255,61,113,.2);padding:4px 12px;flex-shrink:0;display:none;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase}
+.badge-crit{background:var(--accent2);color:#fff}.badge-high{background:var(--gold);color:#000}.badge-info{background:var(--border);color:var(--muted)}
+.banner-text{font-family:var(--mono);font-size:9px;color:var(--muted);flex:1}
+.banner-text strong{color:var(--accent2)}
+#naiad-controls{display:none;align-items:center;gap:7px;padding:6px 12px;border-bottom:1px solid var(--border);background:rgba(255,61,113,.04);flex-shrink:0;flex-wrap:wrap}
+#naiad-controls.visible{display:flex}
+.class-filter{display:flex;gap:3px}
+.class-btn{padding:3px 10px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;text-transform:uppercase}
+.class-btn.on-pub{background:var(--green);border-color:var(--green);color:#000}
+.class-btn.on-gold{background:var(--gold);border-color:var(--gold);color:#000}
+.class-btn.on-excl{background:var(--excl);border-color:var(--excl);color:#fff}
+.blur-global{display:flex;align-items:center;gap:5px;margin-left:auto}
+.blur-global label{cursor:pointer;user-select:none;color:var(--muted);font-family:var(--mono);font-size:9px;text-transform:uppercase}
+.toggle{position:relative;width:30px;height:16px;cursor:pointer}
+.toggle input{display:none}
+.toggle-track{position:absolute;inset:0;background:var(--border);border-radius:8px;transition:.2s}
+.toggle input:checked ~ .toggle-track{background:var(--accent2)}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:12px;height:12px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked ~ .toggle-thumb{left:16px}
+.enum-stat{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.enum-stat span{color:var(--accent2);font-weight:700}
+#enum-progress{display:none;padding:3px 12px;background:rgba(0,229,255,.04);border-bottom:1px solid rgba(0,229,255,.1);flex-shrink:0;font-family:var(--mono);font-size:9px;color:var(--muted)}
+#enum-progress .prog-bar-wrap{display:inline-block;width:120px;height:5px;background:var(--border);border-radius:3px;vertical-align:middle;margin:0 6px}
+#enum-progress .prog-bar{height:100%;background:var(--accent2);border-radius:3px;width:0%;transition:width .2s}
+#main-split{flex:1;display:flex;overflow:hidden;min-height:0}
+#grid-wrapper{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px;min-width:0}
+#grid-wrapper::-webkit-scrollbar{width:4px}
+#grid-wrapper::-webkit-scrollbar-track{background:var(--bg)}
+#grid-wrapper::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+#log-panel{width:340px;flex-shrink:0;border-left:1px solid var(--border);background:var(--surface);display:none;flex-direction:column;overflow:hidden}
+#log-panel.visible{display:flex}
+#log-header{padding:6px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#log-header span{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent2);text-transform:uppercase}
+#log-clear{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:3px;cursor:pointer}
+#log-clear:hover{border-color:var(--accent2);color:var(--accent2)}
+#log-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 0;font-family:var(--mono);font-size:9px;line-height:1.5}
+#log-body::-webkit-scrollbar{width:3px}
+#log-body::-webkit-scrollbar-thumb{background:var(--border)}
+.log-line{padding:1px 10px;white-space:pre-wrap;word-break:break-all;border-left:2px solid transparent}
+.log-line.info{color:var(--muted);border-left-color:var(--border)}
+.log-line.call{color:#60a5fa;border-left-color:#60a5fa}
+.log-line.ok{color:var(--green);border-left-color:var(--green)}
+.log-line.warn{color:var(--gold);border-left-color:var(--gold)}
+.log-line.err{color:var(--accent2);border-left-color:var(--accent2)}
+.log-line.found{color:var(--excl);border-left-color:var(--excl)}
+.log-line.hdr{color:var(--accent);border-left-color:var(--accent);font-weight:700;margin-top:4px}
+#log-stats{padding:6px 10px;border-top:1px solid var(--border);flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.ls{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.ls b{color:var(--accent2)}
+#naiad-grid,#sc-grid{display:grid;gap:6px;grid-template-columns:repeat(var(--cols,4),1fr)}
+.hidden{display:none!important}
+#naiad-wrap,#sc-wrap{display:none}
+#naiad-wrap.visible,#sc-wrap.visible{display:block}
+
+/* TILE - cursor:pointer on whole tile, click opens fullscreen */
+.tile{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;aspect-ratio:16/9;transition:border-color .2s;cursor:pointer}
+.tile:hover{border-color:var(--accent2)}
+.tile.gold-tile{border-color:rgba(245,158,11,.4)}
+.tile.excl-tile{border-color:rgba(167,139,250,.4)}
+.tile video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.blur-ov{position:absolute;inset:0;z-index:2;pointer-events:none;display:flex;align-items:center;justify-content:center;background:transparent}
+.blur-ov.off{display:none}
+.tile video.blurred{filter:blur(12px);transform:scale(1.08);transition:filter .3s,transform .3s}
+.tile video.blurred~.blur-ov{display:flex}
+.prem-screen{position:absolute;inset:0;background:#000;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;pointer-events:none}
+.prem-screen.hidden{display:none}
+.prem-screen .prem-inner{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:6px}
+.prem-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.prem-label.gold{color:var(--gold)}.prem-label.excl{color:var(--excl)}
+.ingest-btn{margin-top:4px;padding:5px 12px;border-radius:var(--radius);font-family:var(--mono);font-size:9px;font-weight:700;cursor:pointer;border:none;text-transform:uppercase;background:linear-gradient(90deg,var(--accent2),var(--excl));color:#fff;transition:opacity .2s}
+.ingest-btn:hover{opacity:.85}.ingest-btn:disabled{opacity:.4;cursor:not-allowed}
+.spin{width:12px;height:12px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.tile-top{position:absolute;top:4px;left:4px;right:4px;z-index:4;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.cls-badge{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;text-transform:uppercase}
+.cb-pub{background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);color:var(--green)}
+.cb-gold{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);color:var(--gold)}
+.cb-excl{background:rgba(167,139,250,.2);border:1px solid rgba(167,139,250,.4);color:var(--excl)}
+.blur-btn{background:rgba(8,10,14,.75);border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:2px 5px;font-size:9px;cursor:pointer;font-family:var(--mono);transition:all .15s;pointer-events:auto}
+.blur-btn:hover{border-color:var(--accent);color:var(--accent)}
+.blur-btn.show{border-color:var(--accent2);color:var(--accent2)}
+.tile-bot{position:absolute;bottom:0;left:0;right:0;z-index:3;background:linear-gradient(transparent,rgba(8,10,14,.85));padding:14px 6px 4px;display:flex;align-items:center;gap:4px;pointer-events:none}
+.tile-name{font-family:var(--mono);font-size:9px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile-node{font-family:var(--mono);font-size:7px;color:var(--muted);opacity:.7}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.dot-pub{background:var(--green)}.dot-gold{background:var(--gold)}.dot-excl{background:var(--excl)}
+.load-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:12px;color:var(--muted);font-family:var(--mono);font-size:11px;text-align:center}
+.gbx{display:flex;gap:2px}
+.gb{width:22px;height:22px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--mono);transition:all .15s}
+.gb.on,.gb:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* AUDIO BUTTON - needs pointer-events:auto to be clickable */
+.tile .audio-btn{position:absolute;bottom:24px;right:5px;z-index:5;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.15);color:var(--muted);border-radius:3px;padding:2px 5px;font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .15s;pointer-events:auto}
+.tile .audio-btn:hover,.tile .audio-btn.live{border-color:var(--accent);color:var(--accent)}
+
+/* FULLSCREEN OVERLAY */
+#fs-overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:9000;display:none;flex-direction:column;align-items:center;justify-content:center;outline:none}
+#fs-overlay.visible{display:flex}
+#fs-video{width:100%;height:100%;object-fit:contain;max-height:calc(100vh - 56px)}
+#fs-bar{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:12px 20px;background:linear-gradient(transparent,rgba(0,0,0,.9));z-index:9001}
+#fs-name{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);flex:1}
+#fs-cls{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px}
+.fs-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:var(--text);border-radius:4px;padding:6px 14px;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:700;transition:all .15s}
+.fs-btn:hover{background:rgba(255,255,255,.28)}
+#fs-prev,#fs-next{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;z-index:9001;transition:all .15s;user-select:none}
+#fs-prev:hover,#fs-next:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5)}
+#fs-prev{left:16px}#fs-next{right:16px}
+#fs-counter{font-family:var(--mono);font-size:10px;color:var(--muted)}
+#fs-hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.3);pointer-events:none}
+#fs-topo{position:absolute;top:52px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;padding:6px 20px;background:rgba(0,0,0,.5);pointer-events:none}
+.topo-node{font-family:var(--mono);font-size:8px;text-align:center;padding:4px 8px;border-radius:3px;line-height:1.4;border:1px solid rgba(255,255,255,.15)}
+.topo-node small{font-size:7px;opacity:.7;display:block}
+.topo-ingest{border-color:rgba(0,229,255,.4);color:var(--accent)}
+.topo-manifest{border-color:rgba(255,61,113,.6);color:var(--accent2);font-weight:700}
+.topo-edge{border-color:rgba(167,139,250,.4);color:var(--excl)}
+.topo-you{border-color:rgba(52,211,153,.4);color:var(--green)}
+.topo-arrow{font-size:14px;color:rgba(255,255,255,.3);padding:0 4px;align-self:center}
+.prem-proof{font-family:var(--mono);font-size:7.5px;color:var(--muted);text-align:center;padding:2px 6px;line-height:1.6;max-width:90%}
+.proof-label{color:var(--border);text-transform:uppercase;letter-spacing:.05em}
+.proof-uuid{color:var(--gold);font-weight:700}
+.proof-unauth{color:var(--accent2);font-weight:700}
+
+#muteAllBtn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:var(--radius);padding:4px 10px;font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s}
+#muteAllBtn:hover{border-color:var(--accent);color:var(--accent)}
+#muteAllBtn.unmuted{border-color:var(--accent2);color:var(--accent2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LIVE<span class="a">GRID</span> <span class="b">&#9889; NAIAD</span><span class="sub">JERK-2026 &middot; Inspectiv PoC</span></div>
+  <div class="source-tabs">
+    <button class="source-tab active" id="tabSC" onclick="switchSrc('sc')">&#9654; STREAMS</button>
+    <button class="source-tab naiad" id="tabNaiad" onclick="switchSrc('naiad')">&#9889; NAIAD PLATFORM</button>
+  </div>
+  <div class="controls" id="naiad-hdr" style="display:none">
+    <label>Grid</label>
+    <div class="gbx">
+      <button class="gb" onclick="setGrid(2)">2&times;</button>
+      <button class="gb on" onclick="setGrid(4)">4&times;</button>
+      <button class="gb" onclick="setGrid(6)">6&times;</button>
+    </div>
+    <label>Brand</label>
+    <select id="n-brand" onchange="onBrandChange()"></select>
+    <label>Conc</label>
+    <select id="n-conc">
+      <option value="8">8</option>
+      <option value="16" selected>16</option>
+      <option value="24">24</option>
+      <option value="32">32</option>
+    </select>
+    <label>Gender</label>
+    <select id="n-gender" onchange="applyFilters()">
+      <option value="">All</option><option value="f">Female</option><option value="m">Male</option><option value="t">Trans</option>
+    </select>
+    <label>Country</label>
+    <select id="n-country" onchange="applyFilters()"><option value="">All</option></select>
+    <label>Pages</label>
+    <select id="n-pages">
+      <option value="1">1 (~156)</option>
+      <option value="3" selected>3 (~460)</option>
+      <option value="10">10 (~1,500)</option>
+      <option value="ALL">All pages</option>
+    </select>
+    <button class="btn btn-danger" onclick="naiadLoad()">&#9889; ENUMERATE</button>
+    <button class="btn btn-ghost" onclick="clearCache()" title="Clear stale cache and reset grid">&#x1f5d1; CLEAR</button>
+    <button class="btn btn-ghost" id="stopBtn" onclick="naiadStop()" style="display:none">&#9632; STOP</button>
+    <button class="btn btn-ghost" onclick="naiadRefresh()">&#x21ba;</button>
+    <button id="muteAllBtn" onclick="toggleMuteAll()">MUTE ALL</button>
+    <button class="btn btn-ghost" id="logToggle" onclick="toggleLog()" style="border-color:var(--accent2);color:var(--accent2)">&#9654; LOG</button>
+    <button class="btn btn-ghost" onclick="wsMonitorAll()" style="border-color:#60a5fa;color:#60a5fa" title="Open WebSocket monitors on top 5 visible performers">&#128171; WS ALL</button>
+    <button class="btn btn-ghost" onclick="wsCloseAll()" title="Close all WebSocket monitors">&#128308; WS OFF</button>
+  </div>
+  <div class="controls" id="sc-hdr">
+    <label>Gender</label>
+    <select id="sc-gender"><option value="">All</option><option value="female">Female</option><option value="male">Male</option><option value="couple">Couple</option><option value="trans">Trans</option></select>
+    <label>Sort</label>
+    <select id="sc-sort"><option value="viewersCount">Most Viewers</option><option value="viewersCountAsc">Least Viewers</option></select>
+    <button class="btn btn-primary" onclick="scLoad()">&#9654; LOAD</button>
+  </div>
+  <div class="status-bar">
+    <span class="live-dot"></span>
+    <span class="status-text" id="statusTxt">Ready</span>
+    <div class="refresh-progress"><div class="refresh-bar" id="rbar" style="animation:none"></div></div>
+  </div>
+</header>
+
+<div id="poc-banner">
+  <span class="badge badge-crit">CRITICAL</span>
+  <span class="badge badge-high">JERK-2026</span>
+  <span class="banner-text"><strong>Unauthenticated stream access confirmed</strong> &mdash; manifest-server.naiadsystems.com serves HLS at hardware layer (bottlenose/FCI) &middot; Zero session validation &middot; 24 brands &middot; Classification-agnostic ingest</span>
+  <span class="badge badge-info">P3 CONFIRMED</span>
+</div>
+
+<div id="naiad-controls">
+  <label>Classification</label>
+  <div class="class-filter">
+    <button class="class-btn on-pub" id="cf-pub" onclick="toggleCls('pub')">&#9679; PUBLIC</button>
+    <button class="class-btn on-gold" id="cf-gold" onclick="toggleCls('gold')">&#9670; GOLD</button>
+    <button class="class-btn on-excl" id="cf-excl" onclick="toggleCls('excl')">&#9733; EXCLUSIVE</button>
+  </div>
+  <div class="blur-global">
+    <label for="gblur">Blur All</label>
+    <label class="toggle">
+      <input type="checkbox" id="gblur" checked onchange="setGlobalBlur(this.checked)">
+      <div class="toggle-track"></div><div class="toggle-thumb"></div>
+    </label>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+    <label>Age</label>
+    <select id="n-age" onchange="applyFilters()" style="width:70px">
+      <option value="">All</option>
+      <option value="18-21">18-21</option>
+      <option value="22-25">22-25</option>
+      <option value="26-30">26-30</option>
+      <option value="31-40">31-40</option>
+      <option value="40+">40+</option>
+    </select>
+    <label>Ethnicity</label>
+    <select id="n-ethnicity" onchange="applyFilters()"><option value="">All</option></select>
+    <label>Body</label>
+    <select id="n-body" onchange="applyFilters()"><option value="">All</option></select>
+    <label>Hair</label>
+    <select id="n-hair" onchange="applyFilters()"><option value="">All</option></select>
+    <label>Sort</label>
+    <select id="n-sort" onchange="applySort()">
+      <option value="">Default</option>
+      <option value="viewers">Viewers &#9660;</option>
+      <option value="excl_rate">Excl Rate &#9660;</option>
+      <option value="gold_rate">Gold Rate &#9660;</option>
+      <option value="age_asc">Age &#9650;</option>
+    </select>
+  </div>
+  <div class="enum-stat">
+    Disc: <span id="st-disc">0</span> &middot;
+    Live: <span id="st-live">0</span> &middot;
+    Gold: <span id="st-gold">0</span> &middot;
+    Excl: <span id="st-excl">0</span> &middot;
+    Nodes: <span id="st-nodes">0</span> &middot;
+    Auth: <span style="color:var(--green);font-weight:700">NONE</span>
+  </div>
+</div>
+
+<div id="enum-progress">
+  <span id="prog-txt">Fetching...</span>
+  <span class="prog-bar-wrap"><span class="prog-bar" id="prog-bar"></span></span>
+  <span id="prog-pct">0%</span>
+  <span id="prog-rate" style="margin-left:10px;color:var(--accent)"></span>
+</div>
+
+<div id="main-split">
+  <div id="grid-wrapper">
+    <div id="naiad-wrap">
+      <div id="naiad-grid" style="--cols:4"></div>
+      <div id="naiad-empty" class="load-state">
+        Click <strong style="color:var(--accent2)">&#9889; ENUMERATE</strong> to discover live inbound streams<br>
+        <span style="font-size:9px;margin-top:4px">Zero auth &middot; 24 brands &middot; Global performer pool</span>
+      </div>
+    </div>
+    <div id="sc-wrap" class="visible">
+      <div id="sc-grid" style="--cols:4"></div>
+      <div id="sc-empty" class="load-state">Click &#9654; LOAD to fetch Stripchat streams</div>
+    </div>
+  </div>
+  <div id="log-panel">
+    <div id="log-header">
+      <span>&#9654; Enum Log</span>
+      <button id="log-clear" onclick="clearLog()">CLEAR</button>
+    </div>
+    <div id="log-body"></div>
+    <div id="log-stats">
+      <div class="ls">Calls out: <b id="ls-calls">0</b></div>
+      <div class="ls">Responses: <b id="ls-resp">0</b></div>
+      <div class="ls">Hits (HLS): <b id="ls-hits">0</b></div>
+      <div class="ls">Misses: <b id="ls-miss">0</b></div>
+      <div class="ls">Setupstream: <b id="ls-ss">0</b></div>
+      <div class="ls">Manifest: <b id="ls-mf">0</b></div>
+      <div class="ls">Sitemap: <b id="ls-sm">0</b></div>
+      <div class="ls">Elapsed: <b id="ls-time">0s</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- FULLSCREEN OVERLAY -->
+<div id="fs-overlay" tabindex="-1">
+  <div id="fs-hint">&#8592; &#8594; navigate &nbsp;&nbsp; M mute/unmute &nbsp;&nbsp; ESC close</div>
+  <div id="fs-topo"></div>
+  <video id="fs-video" autoplay playsinline style="pointer-events:none"></video>
+  <div id="fs-prev" onclick="fsNav(-1)">&#8592;</div>
+  <div id="fs-next" onclick="fsNav(+1)">&#8594;</div>
+  <div id="fs-bar">
+    <span id="fs-name">&mdash;</span>
+    <span id="fs-cls" class="cls-badge cb-pub">PUBLIC</span>
+    <span id="fs-brand" style="font-family:var(--mono);font-size:10px;color:var(--muted)"></span>
+    <span id="fs-counter" style="font-family:var(--mono);font-size:10px;color:var(--muted)">0 / 0</span>
+    <button class="fs-btn" id="fs-mute-btn" onclick="fsMute()">UNMUTE</button>
+    <button class="fs-btn" onclick="fsClose()">&#x2715; CLOSE</button>
+  </div>
+</div>
+
+<script>
+// ---- BRAND CONFIG ----------------------------------------------------
+// Each brand: { domain, emoji, label, sitemap, pages, note }
+// sitemap: function(page) -> URL
+// pages: default max pages to fetch
+const BRANDS = {
+  '_all': {
+    domain: '_all', emoji: '🌐', label: 'ALL BRANDS',
+    sitemap: null, pages: 3,
+    note: 'Pulls from all NAIAD-family brand sitemaps simultaneously'
+  },
+  'jerkmatelive.com': {
+    domain: 'jerkmatelive.com', emoji: '🔴', label: 'JerkMate Live',
+    sitemap: p => 'https://jerkmatelive.com/cam/performers.xml?page='+p,
+    pages: 67, note: 'Confirmed: 67 pages ~10K slugs'
+  },
+  'streamate.com': {
+    domain: 'streamate.com', emoji: '📡', label: 'Streamate',
+    sitemap: p => 'https://www.streamate.com/cam/performers.xml?page='+p,
+    pages: 67, note: 'Same Sightline/ICF platform'
+  },
+  'cams.com': {
+    domain: 'cams.com', emoji: '🎥', label: 'Cams.com',
+    sitemap: p => 'https://www.cams.com/cam/performers.xml?page='+p,
+    pages: 50, note: 'Same NAIAD infrastructure'
+  },
+  'sexier.com': {
+    domain: 'sexier.com', emoji: '💖', label: 'Sexier',
+    sitemap: p => 'https://www.sexier.com/cam/performers.xml?page='+p,
+    pages: 30, note: 'Same NAIAD infrastructure'
+  },
+  'flirt4free.com': {
+    domain: 'flirt4free.com', emoji: '💃', label: 'Flirt4Free',
+    sitemap: p => 'https://www.flirt4free.com/cam/performers.xml?page='+p,
+    pages: 30, note: 'Potentially different platform; probe to confirm'
+  },
+  'adultfriendfinder.com': {
+    domain: 'adultfriendfinder.com', emoji: '💕', label: 'AdultFriendFinder',
+    sitemap: p => 'https://www.adultfriendfinder.com/go/cam/performers.xml?page='+p,
+    pages: 30, note: 'AFF -- sitemap path unconfirmed; falls back gracefully on 404'
+  }
+};
+
+// Populate brand dropdown
+(function buildBrandSelect() {
+  const sel = document.getElementById('n-brand');
+  Object.values(BRANDS).forEach(b => {
+    const o = document.createElement('option');
+    o.value = b.domain;
+    o.textContent = b.emoji + ' ' + b.domain + (b.domain==='_all'?' ('+Object.keys(BRANDS).length-1+' brands)':'');
+    sel.appendChild(o);
+  });
+})();
+
+function onBrandChange() {
+  const v = document.getElementById('n-brand').value;
+  const b = BRANDS[v];
+  if (b) {
+    const pg = document.getElementById('n-pages');
+    // Update page selector max for brand
+    const allOpt = [...pg.options].find(o=>o.value==='ALL');
+    if (allOpt) allOpt.textContent = 'All (~'+b.pages+' pages)';
+  }
+}
+
+// ---- CONSTANTS -------------------------------------------------------
+const SAKEY    = 'ef464e2534a57b09';
+const HYBRID   = 'https://hybridclient.naiadsystems.com';
+const MANIFEST = 'https://manifest-server.naiadsystems.com';
+
+// ---- STATE -----------------------------------------------------------
+let src='sc', globalBlur=true, performers=[], clsFilter={pub:true,gold:true,excl:true};
+let stats={disc:0,hls:0,gold:0,excl:0,nodes:new Set()};
+let hlsInst={}, running=false, refreshTmr=null;
+let mutedAll=true, activeAudioSlug=null, fsSlug=null, fsHlsInst=null, fsMuted=true;
+let logPanelOpen=false, lc={calls:0,resp:0,hits:0,miss:0,ss:0,mf:0,sm:0};
+let enumStartTime=0, logTimerInt=null;
+
+// ---- LOG -------------------------------------------------------------
+function log(type,msg){const body=document.getElementById('log-body');if(!body)return;const line=document.createElement('div');line.className='log-line '+type;const now=enumStartTime?((Date.now()-enumStartTime)/1000).toFixed(1)+'s':'';line.textContent=(now?'['+now+'] ':'')+msg;body.appendChild(line);body.scrollTop=body.scrollHeight;while(body.children.length>800)body.removeChild(body.firstChild);}
+function updateLogStats(){const el=id=>document.getElementById(id);if(el('ls-calls'))el('ls-calls').textContent=lc.calls;if(el('ls-resp'))el('ls-resp').textContent=lc.resp;if(el('ls-hits'))el('ls-hits').textContent=lc.hits;if(el('ls-miss'))el('ls-miss').textContent=lc.miss;if(el('ls-ss'))el('ls-ss').textContent=lc.ss;if(el('ls-mf'))el('ls-mf').textContent=lc.mf;if(el('ls-sm'))el('ls-sm').textContent=lc.sm;if(enumStartTime&&el('ls-time'))el('ls-time').textContent=((Date.now()-enumStartTime)/1000).toFixed(0)+'s';}
+function clearLog(){const body=document.getElementById('log-body');if(body)body.innerHTML='';lc={calls:0,resp:0,hits:0,miss:0,ss:0,mf:0,sm:0};updateLogStats();}
+function toggleLog(){logPanelOpen=!logPanelOpen;document.getElementById('log-panel').classList.toggle('visible',logPanelOpen);document.getElementById('logToggle').innerHTML=logPanelOpen?'&#x25c4; LOG':'&#9654; LOG';}
+
+// ---- AUDIO -----------------------------------------------------------
+function toggleMuteAll(){mutedAll=!mutedAll;document.querySelectorAll('#naiad-grid video,#sc-grid video').forEach(v=>{v.muted=mutedAll;});const btn=document.getElementById('muteAllBtn');if(btn){btn.textContent=mutedAll?'MUTE ALL':'UNMUTED';btn.classList.toggle('unmuted',!mutedAll);}if(!mutedAll)activeAudioSlug=null;}
+function tileAudio(slug,e){e.stopPropagation();const vid=document.getElementById('v-'+slug);if(!vid)return;if(activeAudioSlug&&activeAudioSlug!==slug){const prev=document.getElementById('v-'+activeAudioSlug);if(prev)prev.muted=true;const pb=document.getElementById('ab-'+activeAudioSlug);if(pb){pb.textContent='AUDIO';pb.classList.remove('live');}}const nm=!vid.muted;vid.muted=nm;const btn=document.getElementById('ab-'+slug);if(btn){btn.textContent=nm?'AUDIO':'MUTED';btn.classList.toggle('live',!nm);}activeAudioSlug=nm?null:slug;}
+
+// ---- FULLSCREEN ------------------------------------------------------
+function getVisibleSlugs(){return[...document.querySelectorAll('#naiad-grid .tile')].filter(t=>t.style.display!=='none').map(t=>t.id.replace('t-',''));}
+
+async function fsOpen(slug) {
+  const p = performers.find(x=>x.slug===slug);
+  if (!p) return;
+
+  // If no hlsUrl (excl/gold not yet ingested), try manifest fetch first
+  if (!p.hlsUrl) {
+    log('call', 'FS: no cached HLS for '+slug+', fetching manifest...');
+    await fetchManifest(p);
+    if (!p.hlsUrl) { log('warn', 'FS: '+slug+' not streaming right now'); return; }
+  }
+
+  fsSlug = slug;
+  fsMuted = false; // always open fullscreen with audio
+  const ov = document.getElementById('fs-overlay');
+  const vid = document.getElementById('fs-video');
+  vid.muted = false;
+  vid.src = '';
+  if (fsHlsInst) { try{fsHlsInst.destroy();}catch(e){} fsHlsInst=null; }
+  if (Hls.isSupported()) {
+    fsHlsInst = new Hls({startLevel:-1, capLevelToPlayerSize:false});
+    fsHlsInst.loadSource(p.hlsUrl);
+    fsHlsInst.attachMedia(vid);
+    fsHlsInst.on(Hls.Events.MANIFEST_PARSED, ()=>vid.play().catch(()=>{}));
+    fsHlsInst.on(Hls.Events.ERROR, (e,d)=>{ if(d.fatal) log('err','FS HLS: '+d.type+' '+d.details); });
+  } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
+    vid.src=p.hlsUrl; vid.play().catch(()=>{});
+  }
+
+  // Populate overlay info
+  document.getElementById('fs-name').textContent = p.nickname;
+  const cb = document.getElementById('fs-cls');
+  cb.textContent = p.cls==='gold'?'GOLD':p.cls==='excl'?'EXCLUSIVE':'PUBLIC';
+  cb.className = 'cls-badge '+(p.cls==='gold'?'cb-gold':p.cls==='excl'?'cb-excl':'cb-pub');
+  const brandInfo = BRANDS[p.brand||'jerkmatelive.com'];
+  document.getElementById('fs-brand').textContent = brandInfo ? brandInfo.emoji+' '+p.brand : '';
+  document.getElementById('fs-mute-btn').textContent = 'MUTE';
+
+  // Stream topology
+  const edge = p.edgeNode||'unknown';
+  const edgeShort = edge.split('.')[0];
+  document.getElementById('fs-topo').innerHTML =
+    '<span class="topo-node">ENCODER</span>'+
+    '<span class="topo-arrow">&#8594;</span>'+
+    '<span class="topo-node topo-ingest">hybridclient.naiadsystems.com<br><small>RTMP ingest (setupstream API)</small></span>'+
+    '<span class="topo-arrow">&#8594;</span>'+
+    '<span class="topo-node topo-manifest">manifest-server.naiadsystems.com<br><small>HLS manifest &#x2605; ZERO AUTH</small></span>'+
+    '<span class="topo-arrow">&#8594;</span>'+
+    '<span class="topo-node topo-edge">'+edgeShort+'.nginxborder-server.naiadsystems.com<br><small>CDN edge (bottlenose/FCI)</small></span>'+
+    '<span class="topo-arrow">&#8594;</span>'+
+    '<span class="topo-node topo-you">BROWSER<br><small>your IP &mdash; no session token</small></span>';
+
+  const slugs = getVisibleSlugs();
+  const idx = slugs.indexOf(slug);
+  document.getElementById('fs-counter').textContent = (idx+1)+' / '+slugs.length;
+  ov.classList.add('visible');
+  // Delay focus so display:flex has rendered
+  setTimeout(()=>{ ov.focus(); }, 50);
+}
+
+function fsClose(){document.getElementById('fs-overlay').classList.remove('visible');const vid=document.getElementById('fs-video');vid.src='';if(fsHlsInst){try{fsHlsInst.destroy();}catch(e){}fsHlsInst=null;}fsSlug=null;}
+function fsNav(dir){const slugs=getVisibleSlugs();if(!slugs.length)return;const idx=fsSlug?slugs.indexOf(fsSlug):-1;const next=(idx+dir+slugs.length)%slugs.length;fsOpen(slugs[next]);}
+function fsMute(){fsMuted=!fsMuted;const vid=document.getElementById('fs-video');if(vid)vid.muted=fsMuted;document.getElementById('fs-mute-btn').textContent=fsMuted?'UNMUTE':'MUTE';}
+function fsKey(e){if(e.key==='ArrowLeft'){e.preventDefault();fsNav(-1);}if(e.key==='ArrowRight'){e.preventDefault();fsNav(+1);}if(e.key==='Escape'){e.preventDefault();fsClose();}if(e.key==='m'||e.key==='M')fsMute();}
+document.getElementById('fs-overlay').addEventListener('click',function(e){if(e.target===this||e.target===document.getElementById('fs-video'))fsClose();});
+
+// ---- PERSISTENT STATE ------------------------------------------------
+function saveState(){try{localStorage.setItem('naiad_performers',JSON.stringify(performers.map(p=>({slug:p.slug,nickname:p.nickname,country:p.country,gender:p.gender,cls:p.cls,inGold:p.inGold,inExcl:p.inExcl,hlsUrl:p.hlsUrl,edgeNode:p.edgeNode,brand:p.brand}))));localStorage.setItem('naiad_saved_at',Date.now());localStorage.setItem('naiad_brand',document.getElementById('n-brand').value);}catch(e){}}
+function loadState(){try{const raw=localStorage.getItem('naiad_performers');const savedAt=parseInt(localStorage.getItem('naiad_saved_at')||'0');if(!raw)return false;const data=JSON.parse(raw);if(!data.length)return false;const ageMin=Math.round((Date.now()-savedAt)/60000);const brand=localStorage.getItem('naiad_brand');if(brand){const sel=document.getElementById('n-brand');if(sel)sel.value=brand;}performers=data;stats.disc=data.length;stats.hls=data.filter(p=>p.hlsUrl).length;stats.nodes=new Set(data.map(p=>p.edgeNode).filter(Boolean));document.getElementById('naiad-empty').classList.add('hidden');data.forEach(p=>{renderTile(p);if(p.country)addCountry(p.country);});applyFilters();updateStats();setStatus('Restored '+data.length+' performers ('+ageMin+'m ago) -- refreshing streams...');log('ok','Restored '+data.length+' from cache ('+ageMin+'m old) -- re-validating HLS...');refreshHlsUrls();startRefresh();return true;}catch(e){return false;}}
+function clearCache(){localStorage.removeItem('naiad_performers');localStorage.removeItem('naiad_saved_at');localStorage.removeItem('naiad_brand');performers=[];document.getElementById('naiad-grid').innerHTML='';document.getElementById('naiad-empty').classList.remove('hidden');stats={disc:0,hls:0,gold:0,excl:0,nodes:new Set()};updateStats();setStatus('Cache cleared');}
+async function refreshHlsUrls(){const CONC=16;for(let i=0;i<performers.length&&!running;i+=CONC){const chunk=performers.slice(i,i+CONC);await Promise.all(chunk.map(async p=>{const old=p.hlsUrl;p.hlsUrl=null;p.edgeNode=null;await fetchManifest(p);if(p.hlsUrl){if(p.hlsUrl!==old){const h=hlsInst[p.slug];if(h){try{h.destroy();}catch(e){}delete hlsInst[p.slug];}const vid=document.getElementById('v-'+p.slug);if(vid){vid.style.display='block';loadHLS(p.slug,p.hlsUrl);}}}else{const tile=document.getElementById('t-'+p.slug);if(tile)tile.style.display='none';}}));}const live=performers.filter(p=>p.hlsUrl).length;stats.hls=live;stats.nodes=new Set(performers.map(p=>p.edgeNode).filter(Boolean));updateStats();setStatus(performers.length+' cached - '+live+' live - 0 auth');saveState();}
+
+// ---- SOURCE SWITCHING ------------------------------------------------
+function switchSrc(s){src=s;document.getElementById('tabSC').classList.toggle('active',s==='sc');document.getElementById('tabNaiad').classList.toggle('active',s==='naiad');document.getElementById('sc-wrap').classList.toggle('visible',s==='sc');document.getElementById('naiad-wrap').classList.toggle('visible',s==='naiad');document.getElementById('sc-hdr').style.display=s==='sc'?'flex':'none';document.getElementById('naiad-hdr').style.display=s==='naiad'?'flex':'none';document.getElementById('poc-banner').style.display=s==='naiad'?'flex':'none';document.getElementById('naiad-controls').classList.toggle('visible',s==='naiad');if(s==='naiad'&&!logPanelOpen)toggleLog();}
+function setGrid(n){document.getElementById('naiad-grid').style.setProperty('--cols',n);document.getElementById('sc-grid').style.setProperty('--cols',n);document.querySelectorAll('.gb').forEach((b,i)=>b.classList.toggle('on',[2,4,6][i]===n));}
+function setGlobalBlur(on){globalBlur=on;document.querySelectorAll('#naiad-grid video,#sc-grid video').forEach(v=>v.classList.toggle('blurred',on));document.querySelectorAll('.blur-btn').forEach(b=>{b.textContent=on?'[ SHOW ]':'[ BLUR ]';b.classList.toggle('show',!on);});}
+function tilBlur(e,slug){e.stopPropagation();const t=document.getElementById('t-'+slug);if(!t)return;const vid=t.querySelector('video');if(!vid)return;const btn=t.querySelector('.blur-btn');if(!btn)return;const was=vid.classList.contains('blurred');vid.classList.toggle('blurred',!was);btn.textContent=was?'[ BLUR ]':'[ SHOW ]';btn.classList.toggle('show',was);}
+function toggleCls(c){clsFilter[c]=!clsFilter[c];const map={pub:'on-pub',gold:'on-gold',excl:'on-excl'};const btn=document.getElementById('cf-'+c);if(btn)btn.classList.toggle(map[c],clsFilter[c]);applyFilters();}
+function applyFilters(){
+  const g   = (document.getElementById('n-gender')?.value||'').toLowerCase();
+  const co  = (document.getElementById('n-country')?.value||'').toLowerCase();
+  const eth = (document.getElementById('n-ethnicity')?.value||'').toLowerCase();
+  const bod = (document.getElementById('n-body')?.value||'').toLowerCase();
+  const hai = (document.getElementById('n-hair')?.value||'').toLowerCase();
+  const age = (document.getElementById('n-age')?.value||'');
+  document.querySelectorAll('#naiad-grid .tile').forEach(t=>{
+    const cls=t.dataset.cls||'pub';
+    const clsOk=(cls==='pub'&&clsFilter.pub)||(cls==='gold'&&clsFilter.gold)||(cls==='excl'&&clsFilter.excl);
+    const gOk=!g||(t.dataset.g||'').toLowerCase()===g;
+    const coOk=!co||(t.dataset.co||'').toLowerCase()===co;
+    const ethOk=!eth||(t.dataset.eth||'').toLowerCase().includes(eth);
+    const bodOk=!bod||(t.dataset.bod||'').toLowerCase().includes(bod);
+    const haiOk=!hai||(t.dataset.hai||'').toLowerCase().includes(hai);
+    let ageOk=true;
+    if(age&&t.dataset.age){
+      const a=parseInt(t.dataset.age)||0;
+      if(age==='18-21') ageOk=a>=18&&a<=21;
+      else if(age==='22-25') ageOk=a>=22&&a<=25;
+      else if(age==='26-30') ageOk=a>=26&&a<=30;
+      else if(age==='31-40') ageOk=a>=31&&a<=40;
+      else if(age==='40+') ageOk=a>40;
+    }
+    t.style.display=(clsOk&&gOk&&coOk&&ethOk&&bodOk&&haiOk&&ageOk)?'':'none';
+  });
+}
+function applySort(){
+  const sortBy=document.getElementById('n-sort')?.value||'';
+  if(!sortBy) return;
+  const grid=document.getElementById('naiad-grid');
+  const tiles=[...grid.querySelectorAll('.tile')];
+  tiles.sort((a,b)=>{
+    const pa=performers.find(x=>x.slug===a.id.replace('t-',''));
+    const pb=performers.find(x=>x.slug===b.id.replace('t-',''));
+    if(!pa||!pb) return 0;
+    if(sortBy==='viewers') return (pb.viewers||0)-(pa.viewers||0);
+    if(sortBy==='excl_rate') return (pb.exclPerMin||0)-(pa.exclPerMin||0);
+    if(sortBy==='gold_rate') return (pb.goldPerMin||0)-(pa.goldPerMin||0);
+    if(sortBy==='age_asc') return (pa.age||0)-(pb.age||0);
+    return 0;
+  });
+  tiles.forEach(t=>grid.appendChild(t));
+}
+
+// ---- SITEMAP ---------------------------------------------------------
+async function fetchSitemapPage(brandDomain, page) {
+  const b = BRANDS[brandDomain];
+  if (!b || !b.sitemap) return [];
+  const url = b.sitemap(page);
+  log('call', 'SITEMAP ['+b.emoji+' '+brandDomain+'] GET p'+page);
+  lc.calls++; lc.sm++;
+  const t0 = Date.now();
+  try {
+    const r = await fetch(url);
+    const ms = Date.now()-t0;
+    if (!r.ok) { log('warn', 'SITEMAP ['+brandDomain+'] p'+page+' -> HTTP '+r.status+' ('+ms+'ms)'); lc.resp++; updateLogStats(); return []; }
+    const txt = await r.text();
+    const xml = new DOMParser().parseFromString(txt, 'application/xml');
+    const slugs = [...xml.querySelectorAll('loc')].map(l=>l.textContent.trim()).filter(u=>u.includes('/cam/')).map(u=>u.split('/cam/').pop().replace(/\/$/,''));
+    log('ok', 'SITEMAP ['+brandDomain+'] p'+page+' -> '+slugs.length+' slugs ('+ms+'ms)');
+    lc.resp++; updateLogStats();
+    return slugs.map(s=>({slug:s, brand:brandDomain}));
+  } catch(e) { log('warn', 'SITEMAP ['+brandDomain+'] p'+page+' SKIP (CORS/404: '+e.message.substring(0,40)+')'); lc.resp++; updateLogStats(); return []; }
+}
+
+// ---- MAIN ENUMERATE --------------------------------------------------
+async function naiadLoad() {
+  if (running) return;
+  running = true;
+  clearLog();
+  enumStartTime = Date.now();
+  logTimerInt = setInterval(updateLogStats, 500);
+  performers = [];
+  stats = {disc:0,hls:0,gold:0,excl:0,nodes:new Set()};
+  document.getElementById('naiad-grid').innerHTML = '';
+  document.getElementById('naiad-empty').classList.add('hidden');
+  document.getElementById('stopBtn').style.display = 'inline-flex';
+  document.getElementById('enum-progress').style.display = 'block';
+  updateStats();
+
+  const selectedBrand = document.getElementById('n-brand').value;
+  const pagesVal = document.getElementById('n-pages').value;
+  const CONC = parseInt(document.getElementById('n-conc').value);
+
+  // Determine which brands to pull sitemaps from
+  const isAll = selectedBrand === '_all';
+  const targetBrands = isAll
+    ? Object.keys(BRANDS).filter(k=>k!=='_all')
+    : [selectedBrand];
+
+  // Determine page count per brand
+  const getMaxPages = (brandDomain) => {
+    if (pagesVal === 'ALL') return BRANDS[brandDomain]?.pages || 67;
+    return parseInt(pagesVal);
+  };
+
+  log('hdr', '=== NAIAD ENUM START ===');
+  log('info', 'Mode:    ' + (isAll ? 'ALL BRANDS ('+targetBrands.length+')' : selectedBrand));
+  log('info', 'Hybrid:  ' + HYBRID);
+  log('info', 'Manifest:' + MANIFEST);
+  log('info', 'Workers: ' + CONC + ' concurrent');
+  log('info', 'sakey:   ' + SAKEY);
+  if (isAll) targetBrands.forEach(b => { const br=BRANDS[b]; log('info', '  '+br.emoji+' '+b+' -> '+getMaxPages(b)+' pages ('+br.note+')'); });
+  log('hdr', '--- Phase 1: Sitemap Discovery ---');
+
+  setStatus('Fetching sitemaps...');
+  setProgress(0, 1, 'Firing all sitemap requests in parallel...');
+
+  // Fire ALL sitemap pages for ALL target brands simultaneously
+  const allPageRequests = [];
+  for (const brandDomain of targetBrands) {
+    const maxPages = getMaxPages(brandDomain);
+    for (let p = 0; p < maxPages; p++) {
+      allPageRequests.push({brandDomain, page: p});
+    }
+  }
+  log('info', 'Total sitemap requests: ' + allPageRequests.length);
+
+  const pageResults = await Promise.all(allPageRequests.map(({brandDomain, page}) => fetchSitemapPage(brandDomain, page)));
+  const allEntries = pageResults.flat(); // [{slug, brand}]
+
+  // Dedupe by slug (slug is the unique performer identifier across brands)
+  const seenSlugs = new Set();
+  const uniqueEntries = allEntries.filter(e => {
+    if (seenSlugs.has(e.slug)) return false;
+    seenSlugs.add(e.slug);
+    return true;
+  });
+
+  log('ok', 'Sitemap complete: '+allEntries.length+' raw -> '+uniqueEntries.length+' unique slugs');
+  log('info', 'Deduplicated '+(allEntries.length-uniqueEntries.length)+' cross-brand duplicates');
+
+  if (!running) { enumDone(); return; }
+
+  log('hdr', '--- Phase 2: Enrich (setupstream + manifest in parallel) ---');
+  log('info', 'Workers: '+CONC+' concurrent, each fires setupstream+manifest simultaneously');
+  log('info', 'Using sk='+selectedBrand+(isAll?' (setupstream brand key)':''));
+  log('info', 'Total performers to probe: '+uniqueEntries.length);
+
+  // For ALL mode, use jerkmatelive as the sk for setupstream (most reliable)
+  const setupstreamBrand = isAll ? 'jerkmatelive.com' : selectedBrand;
+  setStatus('Enriching '+uniqueEntries.length+' performers ('+CONC+' concurrent)...');
+
+  let done_count = 0;
+  const t0 = Date.now();
+
+  for (let i = 0; i < uniqueEntries.length && running; i += CONC) {
+    const chunk = uniqueEntries.slice(i, i+CONC);
+    await Promise.all(chunk.map(e => enrichPerformer(e.slug, setupstreamBrand, e.brand)));
+    done_count += chunk.length;
+    const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+    const rate = elapsed > 0 ? (done_count/elapsed).toFixed(1) : '?';
+    setProgress(done_count, uniqueEntries.length, 'Enriched '+done_count+'/'+uniqueEntries.length+' -- '+stats.hls+' live streams');
+    document.getElementById('prog-rate').textContent = rate+'/s';
+    updateStats();
+  }
+
+  applyFilters();
+  saveState();
+  enumDone();
+}
+
+function naiadStop(){running=false;log('warn','STOPPED by user');}
+
+function enumDone(){
+  running=false;clearInterval(logTimerInt);
+  document.getElementById('stopBtn').style.display='none';
+  document.getElementById('enum-progress').style.display='none';
+  document.getElementById('prog-rate').textContent='';
+  const elapsed=enumStartTime?((Date.now()-enumStartTime)/1000).toFixed(1):'?';
+  log('hdr','=== ENUM COMPLETE ===');
+  log('ok','Performers: '+stats.disc);
+  log('ok','Live HLS:   '+stats.hls);
+  log('ok','Gold:       '+performers.filter(p=>p.inGold).length);
+  log('ok','Excl:       '+performers.filter(p=>p.inExcl).length);
+  log('ok','Edge nodes: '+stats.nodes.size+' ['+[...stats.nodes].map(n=>n.split('.')[0]).join(', ')+']');
+  log('ok','Total calls:'+lc.calls+' ('+lc.ss+' setupstream, '+lc.mf+' manifest, '+lc.sm+' sitemap)');
+  log('ok','Elapsed:    '+elapsed+'s');
+  log('ok','Auth req:   NONE (0/'+lc.calls+')');
+  setStatus(stats.disc+' performers - '+stats.hls+' live - 0 auth - '+elapsed+'s');
+  updateLogStats();startRefresh();
+}
+
+function setProgress(cur,total,msg){const pct=total>0?Math.round((cur/total)*100):0;document.getElementById('prog-bar').style.width=pct+'%';document.getElementById('prog-pct').textContent=pct+'%';document.getElementById('prog-txt').textContent=msg;}
+
+// ---- ENRICH PERFORMER ------------------------------------------------
+async function enrichPerformer(slug, brand, sourceBrand) {
+  log('call', 'PROBE '+slug+' [src:'+sourceBrand+']');
+  log('call', '  POST '+HYBRID+'/api/v3/setupstream/ sk='+brand);
+  log('call', '  GET  '+MANIFEST+'/live/s:'+slug+'.json?abr=ue1');
+  lc.calls+=2; lc.ss++; lc.mf++;
+
+  const t0=Date.now();
+  const [ssRes,mfRes]=await Promise.allSettled([fetchSetupstream(slug,brand),fetchManifestRaw(slug)]);
+  const ms=Date.now()-t0;
+  lc.resp+=2;
+
+  const ss=ssRes.status==='fulfilled'?ssRes.value:null;
+  const mf=mfRes.status==='fulfilled'?mfRes.value:null;
+
+  if (!ss) { log('warn','  setupstream MISS ['+slug+'] ('+ms+'ms)'); lc.miss++; updateLogStats(); return; }
+  const perf=(ss.config||{}).performer||{};
+  if (!perf.nickname) { log('warn','  no nickname ['+slug+'] -- offline'); lc.miss++; updateLogStats(); return; }
+
+  // First live hit: dump full attribute map to log for filter discovery
+  if (lc.hits === 0 && ss.config) {
+    log('hdr', '--- SETUPSTREAM RESPONSE STRUCTURE (first hit) ---');
+    const attrs = perf.attributes||{};
+    log('info', 'performer.attributes keys: '+Object.keys(attrs).join(', '));
+    Object.entries(attrs).forEach(([k,v]) => log('info', '  attr.'+k+': '+JSON.stringify(v)));
+    const rateKeys = Object.keys(ss.config.rate||{});
+    log('info', 'config.rate keys: '+rateKeys.join(', '));
+    const bs2 = (ss.config.rate||{}).blocksessions||{};
+    log('info', 'blocksessions keys: '+Object.keys(bs2).join(', '));
+    log('hdr', '--- END STRUCTURE DUMP ---');
+  }
+
+  const country=(perf.attributes||{}).Country||'';
+  const gender=(perf.attributes||{}).Gender||'';
+
+  // Classification from blocksessions -- must be before log line that uses cls
+  const bs=(ss.config?.rate||{}).blocksessions||{};
+  const inExcl=(bs.exclusive||[]).length>0;
+  const inGold=!inExcl&&((bs.premium||[]).length>0||(bs.resumed||[]).length>0);
+  const cls=inExcl?'excl':inGold?'gold':'pub';
+
+  log('info','  setupstream OK: nick="'+perf.nickname+'" country='+country+' gender='+gender+' cls='+cls.toUpperCase()+' ('+ms+'ms)');
+
+  let hlsUrl=null,edgeNode=null;
+  if (mf) {
+    if (mf.self){hlsUrl=mf.self.includes('.m3u8')?mf.self:mf.self.replace('.json','.m3u8');const mx=hlsUrl.match(/https?:\/\/([^/]+)/);if(mx)edgeNode=mx[1];}
+    else{const enc=mf.formats&&mf.formats['mp4-hls']&&mf.formats['mp4-hls'].encodings;if(enc&&enc[0]&&enc[0].location){hlsUrl=enc[0].location;const mx=hlsUrl.match(/https?:\/\/([^/]+)/);if(mx)edgeNode=mx[1];}}
+  }
+
+  if (!hlsUrl){log('warn','  no HLS ['+slug+'] -- not streaming'); lc.miss++; updateLogStats(); return;}
+
+  log('found','  LIVE! ['+cls.toUpperCase()+'] '+hlsUrl.substring(0,60));
+  log('found','  CDN node: '+edgeNode);
+  if(cls!=='pub') {
+    const uuids=(ss.config?.rate||{}).blocksessions||{};
+    const arr=inExcl?(uuids.exclusive||[]):(uuids.premium||uuids.resumed||[]);
+    const rate=(ss.config?.rate||{}).tokenRate||(ss.config?.rate||{}).tokensPerMinute||0;
+    log('found','  ** '+cls.toUpperCase()+' SESSION ACTIVE **');
+    if(arr.length) log('found','  Session UUID: '+arr[0]);
+    if(rate) log('found','  Rate: '+rate+' tokens/min -- stream resolves WITHOUT session token');
+    else log('found','  Stream resolves WITHOUT session token (classification-agnostic ingest confirmed)');
+  }
+  lc.hits++; updateLogStats();
+
+
+  // Store session proof data for display
+  const sessionUuids = inExcl?(bs.exclusive||[]):(bs.premium||bs.resumed||[]);
+  const rateData = ss.config?.rate||{};
+  const tokenRate = rateData.tokenRate||rateData.tokensPerMinute||rateData.tpm||0;
+  // Store full attributes map for UI filtering
+  const attrs = perf.attributes||{};
+  const age = parseInt(attrs.Age||attrs.age||0);
+  const ethnicity = attrs.Ethnicity||attrs.EthnicAppearance||attrs.ethnic||'';
+  const bodyType = attrs.BodyType||attrs.bodyType||attrs.Body||'';
+  const hairColor = attrs.HairColor||attrs.hairColor||attrs.Hair||'';
+  const language = attrs.Language||attrs.Languages||attrs.Spoken||'';
+  const eyeColor = attrs.EyeColor||attrs.eyeColor||attrs.Eyes||'';
+  // Per-minute rates from config.rate
+  const rateObj = ss.config?.rate||{};
+  const goldPerMin = rateObj.gold_per_min||rateObj.goldPerMin||0;
+  const exclPerMin = rateObj.exclusive_per_min||rateObj.exclusivePerMin||0;
+  const c2cPerMin  = rateObj.c2c_per_min||rateObj.c2cPerMin||0;
+  const viewers = perf.viewers||perf.viewersCount||perf.num_viewers||ss.config?.viewers||0;
+  const roomStatus = rateObj.room_status||perf.room_status||'';
+  const p={slug,nickname:perf.nickname,country,gender,cls,inGold,inExcl,hlsUrl,edgeNode,
+    brand:sourceBrand,sessionUuids,tokenRate,age,ethnicity,bodyType,hairColor,language,eyeColor,
+    goldPerMin,exclPerMin,c2cPerMin,viewers,roomStatus,attrs};
+
+
+
+  performers.push(p);
+  stats.disc++; stats.hls++;
+  if(edgeNode)stats.nodes.add(edgeNode);
+  renderTile(p);
+  addCountry(country);
+  addFilterOption('n-ethnicity', ethnicity);
+  addFilterOption('n-body', bodyType);
+  addFilterOption('n-hair', hairColor);
+  // Cache every 10 hits
+  if(stats.disc % 10 === 0) saveState();
+}
+
+async function fetchSetupstream(slug,brand){try{const r=await fetch(HYBRID+'/api/v3/setupstream/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({performerName:slug,version:'32.1.8',platform:'scp',sakey:SAKEY,sabasic:'',sk:brand,clientUrl:'https://'+brand+'/cam/'+slug,isGoldOnly:false,bypassRateThrottler:false,bypassRateThrottler4InternalIPs:false})});if(!r.ok)return null;const txt=await r.text();if(!txt||txt.length<10)return null;return JSON.parse(txt);}catch(e){return null;}}
+async function fetchManifestRaw(slug){try{const r=await fetch(MANIFEST+'/live/s:'+slug+'.json?&img=true&vdc=true&sbp=true&abr=ue1&ns=icfrooms');if(!r.ok)return null;const txt=await r.text();if(!txt||txt.length<10)return null;return JSON.parse(txt);}catch(e){return null;}}
+async function fetchManifest(p){const d=await fetchManifestRaw(p.slug);if(!d)return;if(d.self){p.hlsUrl=d.self.includes('.m3u8')?d.self:d.self.replace('.json','.m3u8');const mx=p.hlsUrl.match(/https?:\/\/([^/]+)/);if(mx)p.edgeNode=mx[1];return;}const hls=d.formats&&d.formats['mp4-hls']&&d.formats['mp4-hls'].encodings;if(hls&&hls[0]&&hls[0].location){p.hlsUrl=hls[0].location;const m=p.hlsUrl.match(/https?:\/\/([^/]+)/);if(m)p.edgeNode=m[1];}}
+
+// ---- RENDER TILE -----------------------------------------------------
+// FULLSCREEN FIX: onclick on tile div itself; stopPropagation in all buttons
+function renderTile(p) {
+  const grid = document.getElementById('naiad-grid');
+  if (document.getElementById('t-'+p.slug)) return;
+  const cls = p.cls;
+  const brandInfo = BRANDS[p.brand||'jerkmatelive.com'];
+  const brandEmoji = brandInfo ? brandInfo.emoji+' ' : '';
+  const badge = cls==='gold'?'<span class="cls-badge cb-gold">&#9670; GOLD</span>':cls==='excl'?'<span class="cls-badge cb-excl">&#9733; EXCL</span>':'<span class="cls-badge cb-pub">&#9679; PUBLIC</span>';
+  const dotCls = cls==='gold'?'dot-gold':cls==='excl'?'dot-excl':'dot-pub';
+  const nodeShort = p.edgeNode?p.edgeNode.split('.')[0]:'';
+  const showVideo = cls==='pub' && p.hlsUrl;
+
+  const tile = document.createElement('div');
+  tile.className = 'tile'+(cls==='gold'?' gold-tile':cls==='excl'?' excl-tile':'');
+  tile.id = 't-'+p.slug;
+  tile.dataset.cls = cls;
+  tile.dataset.g   = p.gender;
+  tile.dataset.co  = p.country;
+  tile.dataset.eth = p.ethnicity||'';
+  tile.dataset.bod = p.bodyType||'';
+  tile.dataset.hai = p.hairColor||'';
+  tile.dataset.age = p.age||'';
+
+
+  tile.innerHTML =
+    // Click capture layer — entire tile area, below buttons (z:3)
+    '<div style="position:absolute;inset:0;z-index:3;cursor:pointer" onclick="fsOpen(\''+p.slug+'\')"></div>'+
+    '<video id="v-'+p.slug+'" muted autoplay playsinline preload="none"'+
+    ' style="width:100%;height:100%;object-fit:cover;display:'+(showVideo?'block':'none')+';pointer-events:none"'+
+    ' class="'+(globalBlur?'blurred':'')+'"></video>'+
+
+    '<div class="prem-screen '+(cls!=='pub'?'':'hidden')+'" id="ps-'+p.slug+'">'+
+      '<div class="prem-inner">'+
+        '<span class="prem-label '+cls+'">'+(cls==='gold'?'&#9670; GOLD SHOW':'&#9733; EXCLUSIVE')+'</span>'+
+        '<span class="prem-proof" id="proof-'+p.slug+'">loading session data...</span>'+
+        '<button class="ingest-btn" id="ib-'+p.slug+'" onclick="event.stopPropagation();triggerIngest(\''+p.slug+'\')">&#9889; CDN INGEST</button>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="blur-ov '+(globalBlur?'':'off')+'" id="bo-'+p.slug+'">'+
+      '<span style="font-size:16px;opacity:.5">&#128274;</span>'+
+    '</div>'+
+
+    '<div class="tile-top">'+
+      badge+
+      '<button class="blur-btn '+(globalBlur?'':'show')+'"'+
+      ' onclick="tilBlur(event,\''+p.slug+'\')">'+(globalBlur?'[ SHOW ]':'[ BLUR ]')+'</button>'+
+    '</div>'+
+
+    '<button class="audio-btn" id="ab-'+p.slug+'" onclick="tileAudio(\''+p.slug+'\',event)">AUDIO</button>'+
+    '<button class="audio-btn" id="wsb-'+p.slug+'" style="bottom:42px" onclick="event.stopPropagation();wsMonitor(\''+p.slug+'\')" title="Monitor WebSocket room events">&#128154; WS</button>'+
+
+    '<div class="tile-bot" style="pointer-events:none">'+
+      '<div class="dot '+dotCls+'"></div>'+
+      '<span class="tile-name">'+brandEmoji+p.nickname+'</span>'+
+      (p.viewers?'<span class="tile-node">&#128065; '+p.viewers+'</span>':'')+
+      (p.exclPerMin?'<span class="tile-node" style="color:var(--accent2)">$'+p.exclPerMin+'/m</span>':'')+
+      (p.goldPerMin?'<span class="tile-node" style="color:var(--gold)">$'+p.goldPerMin+'/m</span>':'')+
+      (nodeShort&&!p.viewers&&!p.exclPerMin?'<span class="tile-node">'+nodeShort+'</span>':'')+
+    '</div>';
+
+  grid.appendChild(tile);
+
+  const _ok=(cls==='pub'&&clsFilter.pub)||(cls==='gold'&&clsFilter.gold)||(cls==='excl'&&clsFilter.excl);
+  if(!_ok) tile.style.display='none';
+  if(showVideo) loadHLS(p.slug, p.hlsUrl);
+
+  // Populate session proof data on prem-screen
+  if (cls !== 'pub') {
+    const proofEl = document.getElementById('proof-'+p.slug);
+    if (proofEl && p.sessionUuids && p.sessionUuids.length) {
+      const uuid = p.sessionUuids[0];
+      const short = uuid.length > 12 ? uuid.substring(0,8)+'...'+uuid.substring(uuid.length-4) : uuid;
+      const rate = p.tokenRate ? ' &middot; '+p.tokenRate+' tkn/min' : '';
+      proofEl.innerHTML = 
+        '<span class="proof-label">SESSION UUID:</span> <span class="proof-uuid">'+short+'</span>'+rate+'<br>'+
+        '<span class="proof-label">RATE:</span> <span class="proof-uuid">'+(p.exclPerMin?'$'+p.exclPerMin+'/min excl':p.goldPerMin?'$'+p.goldPerMin+'/min gold':'?')+'</span><br>'+
+        '<span class="proof-label">SESSION:</span> <span class="proof-uuid">'+(p.roomStatus||'reserved/standby')+'</span><br>'+
+        '<span class="proof-label">STREAM RESOLVES:</span> <span class="proof-unauth">UNAUTH &#9888;</span>';
+    } else if (proofEl) {
+      proofEl.textContent = 'session active (no uuid exposed)';
+    }
+  }
+}
+
+function loadHLS(slug,url){const vid=document.getElementById('v-'+slug);if(!vid)return;vid.style.display='block';if(globalBlur)vid.classList.add('blurred');if(Hls.isSupported()){const h=new Hls({startLevel:0,capLevelToPlayerSize:true});h.loadSource(url);h.attachMedia(vid);h.on(Hls.Events.MANIFEST_PARSED,()=>vid.play().catch(()=>{}));hlsInst[slug]=h;}else if(vid.canPlayType('application/vnd.apple.mpegurl')){vid.src=url;vid.play().catch(()=>{});}}
+
+// ---- CDN INGEST BYPASS -----------------------------------------------
+async function triggerIngest(slug){const p=performers.find(x=>x.slug===slug);if(!p)return;const btn=document.getElementById('ib-'+slug);btn.disabled=true;btn.innerHTML='<span class="spin"></span>';await fetchManifest(p);if(p.hlsUrl){document.getElementById('ps-'+slug)?.classList.add('hidden');const vid=document.getElementById('v-'+slug);if(vid)vid.style.display='block';loadHLS(slug,p.hlsUrl);btn.innerHTML='&#10003; STREAMING';btn.style.background='var(--green)';const badge=document.querySelector('#t-'+slug+' .cls-badge');if(badge){badge.className='cls-badge cb-pub';badge.textContent='&#9889; INGEST BYPASS';}if(p.edgeNode)stats.nodes.add(p.edgeNode);}else{btn.innerHTML='OFFLINE';btn.disabled=false;}updateStats();}
+
+// ---- REFRESH ---------------------------------------------------------
+async function naiadRefresh(){if(!performers.length){naiadLoad();return;}setStatus('Polling classification state...');const brand=document.getElementById('n-brand').value==='_all'?'jerkmatelive.com':document.getElementById('n-brand').value;for(const p of performers.slice(0,24)){try{const r=await fetch(HYBRID+'/api/v3/setupstream/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({performerName:p.slug,version:'32.1.8',platform:'scp',sakey:SAKEY,sabasic:'',sk:brand,clientUrl:'https://'+brand+'/cam/'+p.slug,isGoldOnly:false,bypassRateThrottler:false,bypassRateThrottler4InternalIPs:false})});if(!r.ok)continue;const d=await r.json();const bs=(d.config?.rate||{}).blocksessions||{};const was=p.cls;const ne=(bs.exclusive||[]).length>0;const ng=!ne&&((bs.premium||[]).length>0||(bs.resumed||[]).length>0);p.inExcl=ne;p.inGold=ng;p.cls=p.inExcl?'excl':p.inGold?'gold':'pub';if(p.cls!==was){document.getElementById('t-'+p.slug)?.remove();renderTile(p);if(p.cls!=='pub'){setStatus('STATE CHANGE: '+p.nickname+' -> '+p.cls.toUpperCase());log('found','STATE CHANGE: '+p.nickname+' -> '+p.cls.toUpperCase()+' (was '+was+')');}}await sleep(120);}catch(e){}}startRefresh();updateStats();}
+function startRefresh(){clearTimeout(refreshTmr);refreshTmr=setTimeout(naiadRefresh,30000);const b=document.getElementById('rbar');b.style.animation='none';b.offsetHeight;b.style.animation='drain 30s linear forwards';}
+
+// ---- STRIPCHAT -------------------------------------------------------
+async function scLoad(){setStatus('Loading Stripchat...');document.getElementById('sc-grid').innerHTML='';document.getElementById('sc-empty').classList.add('hidden');const g=document.getElementById('sc-gender').value;const s=document.getElementById('sc-sort').value;const p=new URLSearchParams({sortBy:s,limit:100,status:'public'});if(g)p.set('gender',g);try{const r=await fetch('https://go.stripchat.com/api/models?'+p,{headers:{Accept:'application/json'}});const d=await r.json();const models=(d.models||[]).filter(m=>m.stream&&m.stream.urls);models.forEach(m=>renderSCTile(m));setStatus('Stripchat: '+models.length+' streams');}catch(e){setStatus('Stripchat error');}}
+function renderSCTile(m){const grid=document.getElementById('sc-grid');const url=m.stream.urls.original||m.stream.urls['720p']||Object.values(m.stream.urls)[0];const tile=document.createElement('div');tile.className='tile';tile.innerHTML='<video muted autoplay playsinline preload="none" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none"></video><div class="blur-ov '+(globalBlur?'':'off')+'"><span style="font-size:16px;opacity:.5">&#128274;</span></div><div class="tile-top"><span class="cls-badge cb-pub">&#9679; STRIPCHAT</span></div><div class="tile-bot" style="pointer-events:none"><div class="dot dot-pub"></div><span class="tile-name">'+m.username+'</span><span class="tile-node">'+(m.viewersCount||0)+' viewers</span></div>';grid.appendChild(tile);const vid=tile.querySelector('video');if(Hls.isSupported()){const h=new Hls({startLevel:0});h.loadSource(url);h.attachMedia(vid);h.on(Hls.Events.MANIFEST_PARSED,()=>vid.play().catch(()=>{}));}else if(vid.canPlayType('application/vnd.apple.mpegurl')){vid.src=url;vid.play().catch(()=>{});}}
+
+// ---- HELPERS ---------------------------------------------------------
+function setStatus(m){document.getElementById('statusTxt').textContent=m;}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function updateStats(){const live=performers.filter(p=>p.hlsUrl).length;const gold=performers.filter(p=>p.inGold).length;const excl=performers.filter(p=>p.inExcl).length;const el=id=>document.getElementById(id);if(el('st-disc'))el('st-disc').textContent=performers.length;if(el('st-live'))el('st-live').textContent=live;if(el('st-gold'))el('st-gold').textContent=gold;if(el('st-excl'))el('st-excl').textContent=excl;if(el('st-nodes'))el('st-nodes').textContent=stats.nodes.size;}
+function addCountry(c){if(!c)return;addFilterOption('n-country',c);}
+function addFilterOption(selId,val){
+  if(!val)return;
+  const sel=document.getElementById(selId);
+  if(!sel)return;
+  const v=String(val).trim();
+  if(!v)return;
+  if(![...sel.options].some(o=>o.value.toLowerCase()===v.toLowerCase())){
+    const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);
+  }
+}
+// ep compat stubs
+function _ep(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+
+// ---- WEBSOCKET ROOM MONITOR ------------------------------------------
+// wss://user-room.naiadsystems.com — real-time room state events
+// Subscribed per-performer; logs session type changes, viewer counts, tips
+let wsMonitors = {}; // slug -> WebSocket
+
+function wsMonitor(slug) {
+  if (wsMonitors[slug]) { wsMonitors[slug].close(); delete wsMonitors[slug]; return; }
+  const p = performers.find(x=>x.slug===slug);
+  if (!p) return;
+
+  // Room websocket — connect as guest, subscribe to performer's room events
+  const wsUrl = 'wss://user-room.naiadsystems.com';
+  let ws;
+  try { ws = new WebSocket(wsUrl); } catch(e) { log('err','WS: cannot connect to '+wsUrl); return; }
+  wsMonitors[slug] = ws;
+
+  log('hdr', '--- WS MONITOR: '+slug+' ---');
+  log('call', 'Connecting: '+wsUrl);
+
+  ws.onopen = () => {
+    log('ok', 'WS connected to user-room.naiadsystems.com');
+    // Subscribe to performer room — standard Streamate room join payload
+    const joinMsg = JSON.stringify({
+      type: 'join',
+      room: slug,
+      nick: 'guest',
+      sakey: SAKEY,
+      token: '',
+      version: '32.1.8'
+    });
+    log('call', 'WS SEND: '+joinMsg);
+    ws.send(joinMsg);
+    // Also try alternate subscribe format
+    const subMsg = JSON.stringify({
+      cmd: 'subscribe',
+      performerName: slug,
+      sakey: SAKEY
+    });
+    ws.send(subMsg);
+    updateWsBtn(slug, true);
+  };
+
+  ws.onmessage = (e) => {
+    const raw = e.data;
+    log('found', 'WS ['+slug+'] RX: '+String(raw).substring(0,200));
+    try {
+      const d = JSON.parse(raw);
+      // Parse known event types
+      if (d.type === 'room_status' || d.cmd === 'room_status' || d.status) {
+        const st = d.status || d.roomStatus || d.type;
+        log('found', '  >> ROOM STATUS: '+st);
+      }
+      if (d.viewers !== undefined || d.viewerCount !== undefined) {
+        const v = d.viewers ?? d.viewerCount;
+        log('found', '  >> VIEWERS: '+v);
+        // Update tile
+        const p2 = performers.find(x=>x.slug===slug);
+        if(p2) { p2.viewers=v; updateStats(); }
+      }
+      if (d.type === 'exclusive_start' || d.exclusive) {
+        log('found', '  >> EXCLUSIVE SESSION STARTED: '+JSON.stringify(d));
+      }
+      if (d.type === 'gold_start' || d.premium || d.gold) {
+        log('found', '  >> GOLD SHOW STARTED: '+JSON.stringify(d));
+      }
+      if (d.type === 'tip' || d.tip || d.tokens) {
+        log('found', '  >> TIP EVENT: '+JSON.stringify(d));
+      }
+      if (d.type === 'public' || d.type === 'free') {
+        log('ok', '  >> ROOM WENT PUBLIC');
+      }
+    } catch(e2) {
+      // Not JSON — log raw
+    }
+  };
+
+  ws.onerror = (e) => {
+    log('warn', 'WS ['+slug+'] error — trying alternate message format...');
+    // Try raw room name format used by some Streamate variants
+    try {
+      ws.send(slug);
+      ws.send(JSON.stringify({room: slug}));
+    } catch(e2) {}
+  };
+
+  ws.onclose = (e) => {
+    log('warn', 'WS ['+slug+'] closed (code:'+e.code+' reason:'+e.reason+')');
+    delete wsMonitors[slug];
+    updateWsBtn(slug, false);
+  };
+}
+
+function wsMonitorAll() {
+  // Monitor all currently visible live performers
+  const slugs = getVisibleSlugs().slice(0,5); // cap at 5 simultaneous WS connections
+  log('hdr', '=== WS MONITOR: attaching to '+slugs.length+' performers ===');
+  slugs.forEach(s => wsMonitor(s));
+}
+
+function wsClose(slug) {
+  if (wsMonitors[slug]) { wsMonitors[slug].close(); delete wsMonitors[slug]; }
+  updateWsBtn(slug, false);
+}
+
+function wsCloseAll() {
+  Object.keys(wsMonitors).forEach(s => { try{wsMonitors[s].close();}catch(e){} });
+  wsMonitors = {};
+  log('warn', 'All WS monitors closed');
+}
+
+function updateWsBtn(slug, active) {
+  const btn = document.getElementById('wsb-'+slug);
+  if (btn) {
+    btn.textContent = active ? '&#128308; WS' : '&#128154; WS';
+    btn.style.borderColor = active ? 'var(--accent2)' : 'var(--border)';
+    btn.style.color = active ? 'var(--accent2)' : 'var(--muted)';
+  }
+}
+
+// ---- INIT ------------------------------------------------------------
+switchSrc('naiad');
+// Document-level keyboard handler for fullscreen nav - works regardless of focus
+document.addEventListener('keydown', function(e) {
+  const ov = document.getElementById('fs-overlay');
+  if (!ov || !ov.classList.contains('visible')) return;
+  if (e.key==='ArrowLeft')  { e.preventDefault(); fsNav(-1); }
+  if (e.key==='ArrowRight') { e.preventDefault(); fsNav(+1); }
+  if (e.key==='Escape')     { e.preventDefault(); fsClose(); }
+  if (e.key==='m'||e.key==='M') fsMute();
+});
+if(!loadState()) setStatus('Ready -- click ENUMERATE to discover live inbound streams');
+</script>
+</body>
+</html>
